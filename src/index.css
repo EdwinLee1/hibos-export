@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Noto Sans KR', system-ui, sans-serif;
+  --color-primary: #2563EB;
+  --color-primary-dark: #1D4ED8;
+  --color-primary-light: #DBEAFE;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #F9FAFB;
+}
