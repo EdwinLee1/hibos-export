@@ -2,13 +2,40 @@
 
 @theme {
   --font-sans: 'Noto Sans KR', system-ui, sans-serif;
-  --color-primary: #2563EB;
-  --color-primary-dark: #1D4ED8;
-  --color-primary-light: #DBEAFE;
+  --color-primary: #8b5cf6;
+  --color-primary-dark: #7c3aed;
+  --color-primary-light: rgba(139, 92, 246, 0.15);
+  --color-surface: #1a1a2e;
+  --color-surface-light: #25253d;
+  --color-surface-dark: #0f0f1a;
+  --color-border: #2d2d44;
+  --color-border-light: #3d3d55;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #F9FAFB;
+  background-color: #0f0f1a;
+  color: #e2e8f0;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f0f1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #3d3d55;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4d4d65;
+}
+
+/* Select option styling */
+select option {
+  background-color: #1a1a2e;
+  color: #e2e8f0;
 }

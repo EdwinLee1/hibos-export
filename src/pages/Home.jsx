@@ -31,47 +31,28 @@ export default function Home() {
     ? products
     : products.filter(p => p.category === selectedCategory);
 
-  // countries 컬렉션 + products의 targetCountries 병합
   const countryInfo = useMemo(() => {
     const countryMap = {};
-
-    // 1) countries 컬렉션에서 등록된 국가 정보 로드
     countries.forEach(c => {
       const upperCode = (c.code || '').toUpperCase();
       if (!upperCode) return;
       countryMap[upperCode] = {
-        code: upperCode,
-        name: c.name || '',
-        requirements: c.requirements || '',
-        documents: new Set((c.documents || []).filter(Boolean)),
-        products: [],
-        categories: new Set()
+        code: upperCode, name: c.name || '', requirements: c.requirements || '',
+        documents: new Set((c.documents || []).filter(Boolean)), products: [], categories: new Set()
       };
     });
-
-    // 2) products의 targetCountries에서 제품/카테고리/서류 정보 추가
     products.forEach(product => {
       (product.targetCountries || []).forEach(code => {
         if (!code) return;
         const upperCode = code.toUpperCase();
         if (!countryMap[upperCode]) {
-          countryMap[upperCode] = {
-            code: upperCode,
-            name: '',
-            requirements: '',
-            documents: new Set(),
-            products: [],
-            categories: new Set()
-          };
+          countryMap[upperCode] = { code: upperCode, name: '', requirements: '', documents: new Set(), products: [], categories: new Set() };
         }
         countryMap[upperCode].products.push(product.name);
         countryMap[upperCode].categories.add(product.category);
-        (product.requiredDocuments || []).forEach(doc => {
-          if (doc) countryMap[upperCode].documents.add(doc);
-        });
+        (product.requiredDocuments || []).forEach(doc => { if (doc) countryMap[upperCode].documents.add(doc); });
       });
     });
-
     return Object.values(countryMap).sort((a, b) => a.code.localeCompare(b.code));
   }, [products, countries]);
 
@@ -85,74 +66,62 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
-      {/* 헤더 */}
       <div className="text-center py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">화장품 수출 정보</h1>
-        <p className="text-gray-500">국가별 수출 요건과 제품 정보를 확인하세요</p>
+        <h1 className="text-3xl font-bold text-gray-100 mb-2">화장품 수출 정보</h1>
+        <p className="text-gray-400">국가별 수출 요건과 제품 정보를 확인하세요</p>
       </div>
 
-      {/* 국가별 수출 정보 - 제품에서 자동 추출 */}
       <section>
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">국가별 수출 정보</h2>
+        <h2 className="text-xl font-semibold text-gray-200 mb-4">국가별 수출 정보</h2>
         {countryInfo.length === 0 ? (
-          <p className="text-gray-400 text-center py-8">등록된 국가 정보가 없습니다.</p>
+          <p className="text-gray-500 text-center py-8">등록된 국가 정보가 없습니다.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {countryInfo.map(country => (
               <div
                 key={country.code}
                 onClick={() => setExpandedCountry(expandedCountry === country.code ? null : country.code)}
-                className={`bg-white rounded-xl p-5 border cursor-pointer transition-all ${
+                className={`bg-surface rounded-xl p-5 border cursor-pointer transition-all ${
                   expandedCountry === country.code
-                    ? 'border-primary shadow-md'
-                    : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                    ? 'border-primary shadow-lg shadow-primary/10'
+                    : 'border-border hover:border-border-light'
                 }`}
               >
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="bg-primary-light text-primary text-sm font-medium px-3 py-1 rounded-full">
-                    {country.code}
-                  </span>
-                  {country.name && (
-                    <span className="font-semibold text-gray-900">{country.name}</span>
-                  )}
+                  <span className="bg-primary-light text-primary text-sm font-medium px-3 py-1 rounded-full">{country.code}</span>
+                  {country.name && <span className="font-semibold text-gray-100">{country.name}</span>}
                   <span className="text-sm text-gray-500">{country.products.length}개 제품</span>
                 </div>
                 {expandedCountry === country.code && (
                   <div className="mt-3 space-y-3">
                     {country.requirements && (
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">수출 요건</p>
-                        <p className="text-sm text-gray-700 whitespace-pre-line bg-gray-50 rounded-lg p-3">
-                          {country.requirements}
-                        </p>
+                        <p className="text-sm text-gray-400 mb-1">수출 요건</p>
+                        <p className="text-sm text-gray-300 whitespace-pre-line bg-surface-dark rounded-lg p-3">{country.requirements}</p>
                       </div>
                     )}
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">카테고리</p>
+                      <p className="text-sm text-gray-400 mb-1">카테고리</p>
                       <div className="flex flex-wrap gap-1">
                         {[...country.categories].map((cat, i) => (
-                          <span key={i} className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded">
-                            {cat}
-                          </span>
+                          <span key={i} className="bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded">{cat}</span>
                         ))}
                       </div>
                     </div>
                     {country.documents.size > 0 && (
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">필요 서류</p>
+                        <p className="text-sm text-gray-400 mb-1">필요 서류</p>
                         <div className="flex flex-wrap gap-1">
                           {[...country.documents].map((doc, i) => (
-                            <span key={i} className="bg-orange-50 text-orange-600 text-xs px-2 py-0.5 rounded">
-                              {doc}
-                            </span>
+                            <span key={i} className="bg-orange-500/15 text-orange-300 text-xs px-2 py-0.5 rounded">{doc}</span>
                           ))}
                         </div>
                       </div>
                     )}
                     {country.products.length > 0 && (
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">대상 제품</p>
-                        <p className="text-xs text-gray-600">{country.products.join(', ')}</p>
+                        <p className="text-sm text-gray-400 mb-1">대상 제품</p>
+                        <p className="text-xs text-gray-400">{country.products.join(', ')}</p>
                       </div>
                     )}
                   </div>
@@ -163,9 +132,8 @@ export default function Home() {
         )}
       </section>
 
-      {/* 제품 목록 - 컴팩트 리스트형 */}
       <section>
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">제품 목록</h2>
+        <h2 className="text-xl font-semibold text-gray-200 mb-4">제품 목록</h2>
         <div className="flex gap-2 mb-4 flex-wrap">
           {categories.map(cat => (
             <button
@@ -174,7 +142,7 @@ export default function Home() {
               className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                 selectedCategory === cat
                   ? 'bg-primary text-white'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+                  : 'bg-surface text-gray-400 border border-border hover:border-border-light'
               }`}
             >
               {cat}
@@ -182,44 +150,34 @@ export default function Home() {
           ))}
         </div>
         {filteredProducts.length === 0 ? (
-          <p className="text-gray-400 text-center py-8">등록된 제품이 없습니다.</p>
+          <p className="text-gray-500 text-center py-8">등록된 제품이 없습니다.</p>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-surface rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-dark">
                 <tr>
-                  <th className="text-left px-3 py-3 font-medium text-gray-600 w-12">No.</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">제품명</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">카테고리</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">주요 성분</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">기능</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">대상 국가</th>
+                  <th className="text-left px-3 py-3 font-medium text-gray-400 w-12">No.</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">제품명</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">카테고리</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">주요 성분</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">기능</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">대상 국가</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {filteredProducts.map((product, index) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-3 text-gray-400 font-mono text-xs">{index + 1}</td>
+                  <tr key={product.id} className="hover:bg-surface-light transition">
+                    <td className="px-3 py-3 text-gray-500 font-mono text-xs">{index + 1}</td>
+                    <td className="px-4 py-3"><span className="font-medium text-gray-100">{product.name}</span></td>
                     <td className="px-4 py-3">
-                      <span className="font-medium text-gray-900">{product.name}</span>
+                      <span className="bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded">{product.category}</span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded">
-                        {product.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {(product.ingredients || []).join(', ')}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {(product.functions || []).join(', ')}
-                    </td>
+                    <td className="px-4 py-3 text-gray-400 text-xs">{(product.ingredients || []).join(', ')}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs">{(product.functions || []).join(', ')}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {(product.targetCountries || []).map((c, i) => (
-                          <span key={i} className="bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded">
-                            {c}
-                          </span>
+                          <span key={i} className="bg-surface-light text-gray-400 text-xs px-1.5 py-0.5 rounded">{c}</span>
                         ))}
                       </div>
                     </td>

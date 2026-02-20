@@ -254,9 +254,9 @@ function CountryDropdown({ countries, value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-left bg-white flex justify-between items-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm text-left flex justify-between items-center hover:border-border-light focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
       >
-        <span className={selectedCodes.length ? 'text-gray-900' : 'text-gray-400'}>
+        <span className={selectedCodes.length ? 'text-gray-100' : 'text-gray-400'}>
           {selectedCodes.length === 0
             ? '국가를 선택하세요'
             : allSelected
@@ -268,16 +268,16 @@ function CountryDropdown({ countries, value, onChange }) {
         </svg>
       </button>
       {open && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 font-medium text-sm text-primary">
+        <div className="absolute z-20 mt-1 w-full bg-surface border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <label className="flex items-center gap-2 px-3 py-2 hover:bg-surface-light cursor-pointer border-b border-border font-medium text-sm text-primary">
             <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-4 w-4 rounded" />
             전체 선택
           </label>
           {countries.map(c => (
-            <label key={c.id || c.code} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm">
+            <label key={c.id || c.code} className="flex items-center gap-2 px-3 py-2 hover:bg-surface-light cursor-pointer text-sm">
               <input type="checkbox" checked={selectedCodes.includes(c.code)} onChange={() => toggle(c.code)} className="h-4 w-4 rounded" />
-              <span className="bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">{c.code}</span>
-              <span className="text-gray-700">{c.name}</span>
+              <span className="bg-surface-light text-gray-400 text-xs px-1.5 py-0.5 rounded font-mono">{c.code}</span>
+              <span className="text-gray-300">{c.name}</span>
             </label>
           ))}
           {countries.length === 0 && (
@@ -595,14 +595,14 @@ export default function AdminProducts() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">제품 관리</h1>
+        <h1 className="text-2xl font-bold text-gray-100">제품 관리</h1>
         <div className="flex gap-2">
           <button
             onClick={() => { setShowCountryMgmt(!showCountryMgmt); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
               showCountryMgmt
                 ? 'bg-gray-700 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-surface-light text-gray-400 hover:bg-border'
             }`}
           >
             {showCountryMgmt ? '국가 관리 닫기' : '국가 관리'}
@@ -624,9 +624,9 @@ export default function AdminProducts() {
 
       {/* 국가 관리 섹션 */}
       {showCountryMgmt && (
-        <div className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
+        <div className="bg-surface rounded-xl p-6 border border-border mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">국가 관리</h2>
+            <h2 className="text-lg font-semibold text-gray-200">국가 관리</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowCountryBulk(!showCountryBulk); setShowCountryForm(false); setParsedCountries([]); }}
@@ -645,9 +645,9 @@ export default function AdminProducts() {
 
           {/* 국가 텍스트 일괄 등록 */}
           {showCountryBulk && (
-            <div className="space-y-4 mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="space-y-4 mb-4 p-4 bg-surface-dark rounded-lg">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">국가별 수출 요건 텍스트</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">국가별 수출 요건 텍스트</label>
                 <p className="text-xs text-gray-400 mb-2">
                   바이어 메일 텍스트를 그대로 붙여넣으세요. 국가명이 본문에 포함되어 있으면 자동 감지합니다.
                 </p>
@@ -655,7 +655,7 @@ export default function AdminProducts() {
                   value={countryBulkText}
                   onChange={e => setCountryBulkText(e.target.value)}
                   rows={8}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder={`예시:\nEgypt (EG)\n- EDA Registration\n- Lab Testing Report\n\n----------\n\nVietnam (VN)\n- Product Registration with DAV`}
                 />
               </div>
@@ -670,29 +670,29 @@ export default function AdminProducts() {
               {parsedCountries.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-800">
+                    <h3 className="text-sm font-semibold text-gray-200">
                       분석 결과: {parsedCountries.length}개 국가
-                      <span className="text-xs font-normal text-gray-500 ml-2">
+                      <span className="text-xs font-normal text-gray-400 ml-2">
                         ({parsedCountries.filter(c => c.selected).length}개 선택됨)
                       </span>
                     </h3>
                     <div className="flex gap-2">
                       <button onClick={() => setParsedCountries(prev => prev.map(c => ({ ...c, selected: true })))} className="text-primary text-xs hover:underline">전체 선택</button>
-                      <button onClick={() => setParsedCountries(prev => prev.map(c => ({ ...c, selected: false })))} className="text-gray-500 text-xs hover:underline">전체 해제</button>
+                      <button onClick={() => setParsedCountries(prev => prev.map(c => ({ ...c, selected: false })))} className="text-gray-400 text-xs hover:underline">전체 해제</button>
                     </div>
                   </div>
                   <div className="space-y-2 max-h-80 overflow-y-auto">
                     {parsedCountries.map((c, i) => (
-                      <div key={i} className={`rounded-lg p-3 border transition ${c.selected ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-white opacity-60'}`}>
+                      <div key={i} className={`rounded-lg p-3 border transition ${c.selected ? 'border-green-300 bg-green-500/15' : 'border-border bg-surface opacity-60'}`}>
                         <div className="flex items-start gap-2">
                           <input type="checkbox" checked={c.selected} onChange={() => toggleParsedCountry(i)} className="mt-1 h-4 w-4" />
                           <div className="flex-1 space-y-1">
                             <div className="grid grid-cols-2 gap-2">
-                              <input type="text" value={c.name} onChange={e => updateParsedCountry(i, 'name', e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-sm" placeholder="국가명" />
-                              <input type="text" value={c.code} onChange={e => updateParsedCountry(i, 'code', e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-sm" placeholder="코드" maxLength={3} />
+                              <input type="text" value={c.name} onChange={e => updateParsedCountry(i, 'name', e.target.value)} className="bg-surface-dark border border-border-light rounded px-2 py-1 text-gray-100 placeholder-gray-500 text-sm" placeholder="국가명" />
+                              <input type="text" value={c.code} onChange={e => updateParsedCountry(i, 'code', e.target.value)} className="bg-surface-dark border border-border-light rounded px-2 py-1 text-gray-100 placeholder-gray-500 text-sm" placeholder="코드" maxLength={3} />
                             </div>
-                            <textarea value={c.requirements} onChange={e => updateParsedCountry(i, 'requirements', e.target.value)} rows={2} className="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="수출 요건" />
-                            <input type="text" value={c.documents} onChange={e => updateParsedCountry(i, 'documents', e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="필요 서류 (쉼표 구분)" />
+                            <textarea value={c.requirements} onChange={e => updateParsedCountry(i, 'requirements', e.target.value)} rows={2} className="w-full bg-surface-dark border border-border-light rounded px-2 py-1 text-gray-100 placeholder-gray-500 text-sm" placeholder="수출 요건" />
+                            <input type="text" value={c.documents} onChange={e => updateParsedCountry(i, 'documents', e.target.value)} className="w-full bg-surface-dark border border-border-light rounded px-2 py-1 text-gray-100 placeholder-gray-500 text-sm" placeholder="필요 서류 (쉼표 구분)" />
                           </div>
                           <button onClick={() => removeParsedCountry(i)} className="text-red-400 hover:text-red-600">&times;</button>
                         </div>
@@ -713,47 +713,47 @@ export default function AdminProducts() {
 
           {/* 국가 개별 추가/수정 폼 */}
           {showCountryForm && (
-            <form onSubmit={handleCountrySubmit} className="space-y-3 mb-4 p-4 bg-gray-50 rounded-lg">
+            <form onSubmit={handleCountrySubmit} className="space-y-3 mb-4 p-4 bg-surface-dark rounded-lg">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">국가명 *</label>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">국가명 *</label>
                   <input
                     type="text"
                     value={countryForm.name}
                     onChange={e => setCountryForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Egypt"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">국가코드 *</label>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">국가코드 *</label>
                   <input
                     type="text"
                     value={countryForm.code}
                     onChange={e => setCountryForm(prev => ({ ...prev, code: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="EG"
                     maxLength={3}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">수출 요건/규정</label>
+                <label className="block text-xs font-medium text-gray-300 mb-1">수출 요건/규정</label>
                 <textarea
                   value={countryForm.requirements}
                   onChange={e => setCountryForm(prev => ({ ...prev, requirements: e.target.value }))}
                   rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="수출 요건 및 규정"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">필요 서류 (쉼표로 구분)</label>
+                <label className="block text-xs font-medium text-gray-300 mb-1">필요 서류 (쉼표로 구분)</label>
                 <input
                   type="text"
                   value={countryForm.documents}
                   onChange={e => setCountryForm(prev => ({ ...prev, documents: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="위생허가서, 성분분석서, MSDS"
                 />
               </div>
@@ -769,11 +769,11 @@ export default function AdminProducts() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {countries.map(country => (
-                <div key={country.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                <div key={country.id} className="bg-surface-dark rounded-lg p-3 border border-border">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <span className="bg-primary-light text-primary text-xs font-medium px-2 py-0.5 rounded-full">{country.code}</span>
-                      <span className="font-medium text-gray-900 text-sm">{country.name}</span>
+                      <span className="font-medium text-gray-100 text-sm">{country.name}</span>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => handleCountryEdit(country)} className="text-primary hover:underline text-xs">수정</button>
@@ -781,12 +781,12 @@ export default function AdminProducts() {
                     </div>
                   </div>
                   {country.requirements && (
-                    <p className="text-xs text-gray-500 mb-1 whitespace-pre-line line-clamp-2">{country.requirements}</p>
+                    <p className="text-xs text-gray-400 mb-1 whitespace-pre-line line-clamp-2">{country.requirements}</p>
                   )}
                   {country.documents && country.documents.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {country.documents.map((d, i) => (
-                        <span key={i} className="bg-gray-200 text-gray-600 text-xs px-1.5 py-0.5 rounded">{d}</span>
+                        <span key={i} className="bg-surface-light text-gray-400 text-xs px-1.5 py-0.5 rounded">{d}</span>
                       ))}
                     </div>
                   )}
@@ -799,9 +799,9 @@ export default function AdminProducts() {
 
       {/* 텍스트 일괄 등록 */}
       {showBulkImport && (
-        <div className="bg-white rounded-xl p-6 border border-gray-200 mb-6 space-y-4">
+        <div className="bg-surface rounded-xl p-6 border border-border mb-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               바이어 메일 또는 제품 목록 텍스트를 붙여넣기 하세요
             </label>
             <p className="text-xs text-gray-400 mb-2">
@@ -811,7 +811,7 @@ export default function AdminProducts() {
               value={bulkText}
               onChange={e => setBulkText(e.target.value)}
               rows={12}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder={`예시:\n* Serums & Body Oils (6 SKUs)\nNiacinamide, Hyaluronic Acid, Vitamin C, Peptides, Botanical Oils\n\n* Moisturizers – Face & Body (6 SKUs)\nCeramides, Shea Butter, Squalane, Hyaluronic Acid\n\n* Cleansers (6 SKUs)\nAmino Acid Cleansing System, Centella, Aloe Vera, Panthenol`}
             />
           </div>
@@ -827,9 +827,9 @@ export default function AdminProducts() {
           {parsedProducts.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-800">
+                <h3 className="text-lg font-semibold text-gray-200">
                   분석 결과: {parsedProducts.length}개 제품
-                  <span className="text-sm font-normal text-gray-500 ml-2">
+                  <span className="text-sm font-normal text-gray-400 ml-2">
                     ({parsedProducts.filter(p => p.selected).length}개 선택됨)
                   </span>
                 </h3>
@@ -842,7 +842,7 @@ export default function AdminProducts() {
                   </button>
                   <button
                     onClick={() => setParsedProducts(prev => prev.map(p => ({ ...p, selected: false })))}
-                    className="text-gray-500 text-xs hover:underline"
+                    className="text-gray-400 text-xs hover:underline"
                   >
                     전체 해제
                   </button>
@@ -854,7 +854,7 @@ export default function AdminProducts() {
                   <div
                     key={i}
                     className={`rounded-lg p-4 border transition ${
-                      p.selected ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50 opacity-60'
+                      p.selected ? 'border-green-300 bg-green-500/15' : 'border-border bg-surface-dark opacity-60'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -867,16 +867,16 @@ export default function AdminProducts() {
                       <div className="flex-1 space-y-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-xs text-gray-500">제품명</label>
-                            <input type="text" value={p.name} onChange={e => updateParsedProduct(i, 'name', e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                            <label className="block text-xs text-gray-400">제품명</label>
+                            <input type="text" value={p.name} onChange={e => updateParsedProduct(i, 'name', e.target.value)} className="w-full bg-surface-dark border border-border-light rounded px-2 py-1.5 text-gray-100 placeholder-gray-500 text-sm" />
                           </div>
                           <div>
-                            <label className="block text-xs text-gray-500">카테고리</label>
-                            <input type="text" value={p.category} onChange={e => updateParsedProduct(i, 'category', e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                            <label className="block text-xs text-gray-400">카테고리</label>
+                            <input type="text" value={p.category} onChange={e => updateParsedProduct(i, 'category', e.target.value)} className="w-full bg-surface-dark border border-border-light rounded px-2 py-1.5 text-gray-100 placeholder-gray-500 text-sm" />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500">대상 국가</label>
+                          <label className="block text-xs text-gray-400">대상 국가</label>
                           <CountryDropdown
                             countries={countries}
                             value={p.targetCountries || ''}
@@ -884,17 +884,17 @@ export default function AdminProducts() {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500">성분</label>
-                          <input type="text" value={p.ingredients} onChange={e => updateParsedProduct(i, 'ingredients', e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                          <label className="block text-xs text-gray-400">성분</label>
+                          <input type="text" value={p.ingredients} onChange={e => updateParsedProduct(i, 'ingredients', e.target.value)} className="w-full bg-surface-dark border border-border-light rounded px-2 py-1.5 text-gray-100 placeholder-gray-500 text-sm" />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-xs text-gray-500">기능</label>
-                            <input type="text" value={p.functions} onChange={e => updateParsedProduct(i, 'functions', e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" placeholder="기능 입력" />
+                            <label className="block text-xs text-gray-400">기능</label>
+                            <input type="text" value={p.functions} onChange={e => updateParsedProduct(i, 'functions', e.target.value)} className="w-full bg-surface-dark border border-border-light rounded px-2 py-1.5 text-gray-100 placeholder-gray-500 text-sm" placeholder="기능 입력" />
                           </div>
                           <div>
-                            <label className="block text-xs text-gray-500">필요 서류</label>
-                            <input type="text" value={p.requiredDocuments} onChange={e => updateParsedProduct(i, 'requiredDocuments', e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" placeholder="EDA Registration, Lab Testing" />
+                            <label className="block text-xs text-gray-400">필요 서류</label>
+                            <input type="text" value={p.requiredDocuments} onChange={e => updateParsedProduct(i, 'requiredDocuments', e.target.value)} className="w-full bg-surface-dark border border-border-light rounded px-2 py-1.5 text-gray-100 placeholder-gray-500 text-sm" placeholder="EDA Registration, Lab Testing" />
                           </div>
                         </div>
                       </div>
@@ -921,51 +921,51 @@ export default function AdminProducts() {
 
       {/* 개별 제품 추가/수정 폼 */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 border border-gray-200 mb-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-surface rounded-xl p-6 border border-border mb-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">제품명 *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">제품명 *</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Hyaluronic Acid Serum"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">카테고리 *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">카테고리 *</label>
               <input
                 type="text"
                 value={form.category}
                 onChange={e => setForm(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Serums & Body Oils"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">주요 성분 (쉼표로 구분)</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">주요 성분 (쉼표로 구분)</label>
             <input
               type="text"
               value={form.ingredients}
               onChange={e => setForm(prev => ({ ...prev, ingredients: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Niacinamide, Hyaluronic Acid"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">기능 (쉼표로 구분)</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">기능 (쉼표로 구분)</label>
             <input
               type="text"
               value={form.functions}
               onChange={e => setForm(prev => ({ ...prev, functions: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Brightening, Moisturizing"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">대상 국가</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">대상 국가</label>
             <CountryDropdown
               countries={countries}
               value={form.targetCountries}
@@ -973,22 +973,22 @@ export default function AdminProducts() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">필요 서류 (쉼표로 구분)</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">필요 서류 (쉼표로 구분)</label>
             <input
               type="text"
               value={form.requiredDocuments}
               onChange={e => setForm(prev => ({ ...prev, requiredDocuments: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="EDA Registration, Ingredient Compliance, Lab Testing Report"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">설명</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">설명</label>
             <textarea
               value={form.description}
               onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Product description"
             />
           </div>
@@ -1007,8 +1007,8 @@ export default function AdminProducts() {
       ) : (
         <div>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 mb-3 bg-red-50 px-4 py-2.5 rounded-lg">
-              <span className="text-sm text-red-700 font-medium">{selectedIds.size}개 선택됨</span>
+            <div className="flex items-center gap-3 mb-3 bg-red-500/15 px-4 py-2.5 rounded-lg">
+              <span className="text-sm text-red-400 font-medium">{selectedIds.size}개 선택됨</span>
               <button
                 onClick={handleBulkDelete}
                 disabled={bulkDeleting}
@@ -1018,15 +1018,15 @@ export default function AdminProducts() {
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="text-gray-500 text-sm hover:underline"
+                className="text-gray-400 text-sm hover:underline"
               >
                 선택 해제
               </button>
             </div>
           )}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-surface rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-dark">
                 <tr>
                   <th className="px-3 py-3 w-10">
                     <input
@@ -1036,17 +1036,17 @@ export default function AdminProducts() {
                       className="h-4 w-4"
                     />
                   </th>
-                  <th className="text-left px-3 py-3 font-medium text-gray-600 w-12">No.</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">제품명</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">카테고리</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">성분</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">대상 국가</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">관리</th>
+                  <th className="text-left px-3 py-3 font-medium text-gray-400 w-12">No.</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">제품명</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">카테고리</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">성분</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-400">대상 국가</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-400">관리</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {products.map((product, index) => (
-                  <tr key={product.id} className={`hover:bg-gray-50 ${selectedIds.has(product.id) ? 'bg-blue-50' : ''}`}>
+                  <tr key={product.id} className={`hover:bg-surface-light ${selectedIds.has(product.id) ? 'bg-purple-500/15' : ''}`}>
                     <td className="px-3 py-3">
                       <input
                         type="checkbox"
@@ -1057,15 +1057,15 @@ export default function AdminProducts() {
                     </td>
                     <td className="px-3 py-3 text-gray-400 font-mono text-xs">{index + 1}</td>
                     <td className="px-4 py-3">
-                      <span className="font-medium text-gray-900">{product.name}</span>
+                      <span className="font-medium text-gray-100">{product.name}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded">
+                      <span className="bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded">
                         {product.category}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{(product.ingredients || []).join(', ')}</td>
-                    <td className="px-4 py-3 text-gray-500">{(product.targetCountries || []).join(', ')}</td>
+                    <td className="px-4 py-3 text-gray-400">{(product.ingredients || []).join(', ')}</td>
+                    <td className="px-4 py-3 text-gray-400">{(product.targetCountries || []).join(', ')}</td>
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => handleEdit(product)}
