@@ -1,0 +1,38 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: AIzaSyDj-i3u0zwI3CuxoSKYwq2xYvqzUXU8yWw
+          VITE_FIREBASE_AUTH_DOMAIN: hibos-export.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: hibos-export
+          VITE_FIREBASE_STORAGE_BUCKET: hibos-export.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID: '283495736470'
+          VITE_FIREBASE_APP_ID: '1:283495736470:web:db61cbb3b8ab9e834d8eb7'
+
+      - name: Deploy to Firebase Hosting
+        run: npx firebase-tools deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
