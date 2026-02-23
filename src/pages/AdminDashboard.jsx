@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [requests, setRequests] = useState([]);
   const [editingCompany, setEditingCompany] = useState(null);
   const [companyForm, setCompanyForm] = useState({ companyName: '', businessNumber: '', representative: '', phone: '', email: '' });
+  const [previewImage, setPreviewImage] = useState(null);
 
   async function fetchAll() {
     try {
@@ -220,7 +221,9 @@ export default function AdminDashboard() {
                 <table className="w-full text-sm">
                   <thead className="bg-surface-dark">
                     <tr>
+                      <th className="text-left px-4 py-2 font-medium text-gray-400">이미지</th>
                       <th className="text-left px-4 py-2 font-medium text-gray-400">제품명</th>
+                      <th className="text-left px-4 py-2 font-medium text-gray-400">자사 제품명</th>
                       <th className="text-right px-4 py-2 font-medium text-gray-400">MOQ</th>
                       <th className="text-right px-4 py-2 font-medium text-gray-400">카툰 입수량</th>
                       <th className="text-right px-4 py-2 font-medium text-gray-400">도매가(원)</th>
@@ -230,7 +233,18 @@ export default function AdminDashboard() {
                   <tbody className="divide-y divide-border">
                     {getCompanyProducts(selectedCompany.id).map(cp => (
                       <tr key={cp.id}>
+                        <td className="px-4 py-2">
+                          {cp.productImages?.length > 0 ? (
+                            <div className="flex gap-1">
+                              {cp.productImages.map((img, i) => (
+                                <img key={i} src={img} alt="" className="w-10 h-10 object-cover rounded border border-border cursor-pointer hover:opacity-80 transition"
+                                  onClick={() => setPreviewImage(img)} />
+                              ))}
+                            </div>
+                          ) : <span className="text-gray-600 text-xs">-</span>}
+                        </td>
                         <td className="px-4 py-2 font-medium text-gray-100">{cp.productName}</td>
+                        <td className="px-4 py-2 text-purple-300">{cp.customProductName || <span className="text-gray-600">-</span>}</td>
                         <td className="px-4 py-2 text-right text-gray-300">{cp.moq?.toLocaleString()}</td>
                         <td className="px-4 py-2 text-right text-gray-300">{cp.cartonQuantity?.toLocaleString()}</td>
                         <td className="px-4 py-2 text-right text-gray-300">{cp.wholesalePrice?.toLocaleString()}원</td>
@@ -261,7 +275,9 @@ export default function AdminDashboard() {
                 <table className="w-full text-sm">
                   <thead className="bg-surface-dark">
                     <tr>
+                      <th className="text-left px-4 py-2 font-medium text-gray-400">이미지</th>
                       <th className="text-left px-4 py-2 font-medium text-gray-400">업체명</th>
+                      <th className="text-left px-4 py-2 font-medium text-gray-400">자사 제품명</th>
                       <th className="text-right px-4 py-2 font-medium text-gray-400">MOQ</th>
                       <th className="text-right px-4 py-2 font-medium text-gray-400">카툰 입수량</th>
                       <th className="text-right px-4 py-2 font-medium text-gray-400">도매가(원)</th>
@@ -271,7 +287,18 @@ export default function AdminDashboard() {
                   <tbody className="divide-y divide-border">
                     {suppliers.sort((a, b) => (a.wholesalePrice || 0) - (b.wholesalePrice || 0)).map(cp => (
                       <tr key={cp.id}>
+                        <td className="px-4 py-2">
+                          {cp.productImages?.length > 0 ? (
+                            <div className="flex gap-1">
+                              {cp.productImages.map((img, i) => (
+                                <img key={i} src={img} alt="" className="w-10 h-10 object-cover rounded border border-border cursor-pointer hover:opacity-80 transition"
+                                  onClick={() => setPreviewImage(img)} />
+                              ))}
+                            </div>
+                          ) : <span className="text-gray-600 text-xs">-</span>}
+                        </td>
                         <td className="px-4 py-2 font-medium text-gray-100">{cp.companyName}</td>
+                        <td className="px-4 py-2 text-purple-300">{cp.customProductName || <span className="text-gray-600">-</span>}</td>
                         <td className="px-4 py-2 text-right text-gray-300">{cp.moq?.toLocaleString()}</td>
                         <td className="px-4 py-2 text-right text-gray-300">{cp.cartonQuantity?.toLocaleString()}</td>
                         <td className="px-4 py-2 text-right text-gray-300">{cp.wholesalePrice?.toLocaleString()}원</td>
@@ -283,6 +310,16 @@ export default function AdminDashboard() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {previewImage && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setPreviewImage(null)}>
+          <div className="relative max-w-3xl max-h-[90vh] p-2">
+            <button onClick={() => setPreviewImage(null)}
+              className="absolute -top-3 -right-3 bg-surface-light text-gray-300 hover:text-white w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold border border-border z-10">&times;</button>
+            <img src={previewImage} alt="제품 이미지" className="max-w-full max-h-[85vh] object-contain rounded-lg" />
+          </div>
         </div>
       )}
     </div>

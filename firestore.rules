@@ -21,11 +21,11 @@ service cloud.firestore {
       allow update, delete: if request.auth != null;
     }
 
-    // 업체별 제품 정보 - 누구나 쓰기(등록), 관리자만 전체 읽기
+    // 업체별 제품 정보 - 누구나 등록/읽기, 관리자만 수정/삭제
     match /companyProducts/{cpId} {
       allow create: if true;
       allow read: if true;
-      allow update, delete: if true;
+      allow update, delete: if request.auth != null;
     }
 
     // 업체 수출 희망 요청 - 누구나 등록, 관리자만 읽기/수정/삭제
