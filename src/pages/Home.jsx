@@ -72,7 +72,7 @@ export default function Home() {
       </div>
 
       <section>
-        <h2 className="text-xl font-semibold text-gray-200 mb-4">국가별 수출 정보</h2>
+        <h2 className="text-xl font-semibold text-gray-200 mb-4">국가별 수출 요구 서류</h2>
         {countryInfo.length === 0 ? (
           <p className="text-gray-500 text-center py-8">등록된 국가 정보가 없습니다.</p>
         ) : (
