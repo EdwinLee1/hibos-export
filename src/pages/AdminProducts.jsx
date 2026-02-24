@@ -14,6 +14,47 @@ const emptyProduct = {
 
 const emptyCountry = { name: '', code: '', requirements: '', documents: '' };
 
+const CATEGORIES = [
+  '스킨케어', '에센스/세럼', '크림/로션', '클렌징',
+  '선케어', '마스크팩', '메이크업', '립케어',
+  '아이케어', '바디케어', '헤어케어', '네일케어',
+  '향수/미스트', '남성화장품', '기능성화장품',
+];
+
+function CategorySelect({ value, onChange }) {
+  const [customMode, setCustomMode] = useState(false);
+  const isCustom = value && !CATEGORIES.includes(value);
+
+  return customMode || isCustom ? (
+    <div className="flex gap-2">
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="flex-1 bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        placeholder="카테고리 직접 입력"
+      />
+      <button type="button" onClick={() => { setCustomMode(false); onChange(''); }}
+        className="text-xs text-gray-400 hover:text-primary whitespace-nowrap px-2">목록 선택</button>
+    </div>
+  ) : (
+    <div className="flex gap-2">
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="flex-1 bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+      >
+        <option value="">카테고리 선택</option>
+        {CATEGORIES.map(cat => (
+          <option key={cat} value={cat}>{cat}</option>
+        ))}
+      </select>
+      <button type="button" onClick={() => setCustomMode(true)}
+        className="text-xs text-gray-400 hover:text-primary whitespace-nowrap px-2">직접 입력</button>
+    </div>
+  );
+}
+
 // 쉼표로 구분된 카테고리명을 개별 항목으로 분리
 function splitCategoryItems(text) {
   const parens = [];
@@ -872,7 +913,7 @@ export default function AdminProducts() {
                           </div>
                           <div>
                             <label className="block text-xs text-gray-400">카테고리</label>
-                            <input type="text" value={p.category} onChange={e => updateParsedProduct(i, 'category', e.target.value)} className="w-full bg-surface-dark border border-border-light rounded px-2 py-1.5 text-gray-100 placeholder-gray-500 text-sm" />
+                            <CategorySelect value={p.category} onChange={val => updateParsedProduct(i, 'category', val)} />
                           </div>
                         </div>
                         <div>
@@ -935,13 +976,7 @@ export default function AdminProducts() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">카테고리 *</label>
-              <input
-                type="text"
-                value={form.category}
-                onChange={e => setForm(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Serums & Body Oils"
-              />
+              <CategorySelect value={form.category} onChange={val => setForm(prev => ({ ...prev, category: val }))} />
             </div>
           </div>
           <div>
