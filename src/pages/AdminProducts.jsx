@@ -21,6 +21,37 @@ const CATEGORIES = [
   '향수/미스트', '남성화장품', '기능성화장품',
 ];
 
+const CATEGORY_KEYWORDS = {
+  '에센스/세럼': ['serum', 'essence', 'ampoule', 'ampule', 'oil', 'body oil'],
+  '크림/로션': ['cream', 'moisturizer', 'lotion', 'butter', 'balm', 'gel', 'emulsion', 'ointment'],
+  '클렌징': ['cleanser', 'cleansing', 'wash', 'foam', 'remover', 'peeling', 'scrub', 'exfoliat'],
+  '선케어': ['sun', 'sunscreen', 'spf', 'uv', 'solar'],
+  '마스크팩': ['mask', 'sheet mask', 'pack', 'patch', 'peel-off'],
+  '메이크업': ['makeup', 'foundation', 'concealer', 'powder', 'blush', 'cushion', 'bb ', 'cc ', 'primer', 'bronzer', 'highlighter', 'palette'],
+  '립케어': ['lip', 'lipstick', 'lip gloss', 'lip balm', 'lip tint'],
+  '아이케어': ['eye', 'eye cream', 'eye patch', 'eyeliner', 'mascara', 'brow', 'lash'],
+  '바디케어': ['body', 'body wash', 'body lotion', 'shower', 'hand cream', 'hand', 'foot'],
+  '헤어케어': ['hair', 'shampoo', 'conditioner', 'scalp', 'treatment'],
+  '네일케어': ['nail', 'nail polish', 'cuticle', 'manicure'],
+  '향수/미스트': ['perfume', 'mist', 'fragrance', 'cologne', 'eau de'],
+  '남성화장품': ['men', "men's", 'male', 'homme', 'shaving', 'aftershave'],
+  '스킨케어': ['toner', 'tonic', 'skin', 'water', 'lotion', 'skincare'],
+  '기능성화장품': ['anti-aging', 'whitening', 'brightening', 'wrinkle', 'acne', 'spot', 'blemish', 'retinol', 'vitamin c'],
+};
+
+function autoMapCategory(productName) {
+  const lower = productName.toLowerCase();
+  // 긴 키워드 먼저 매칭 (더 구체적인 것 우선)
+  const entries = Object.entries(CATEGORY_KEYWORDS);
+  for (const [category, keywords] of entries) {
+    const sorted = [...keywords].sort((a, b) => b.length - a.length);
+    for (const kw of sorted) {
+      if (lower.includes(kw)) return category;
+    }
+  }
+  return '스킨케어'; // 기본값
+}
+
 function CategorySelect({ value, onChange }) {
   const [customMode, setCustomMode] = useState(false);
   const isCustom = value && !CATEGORIES.includes(value);
@@ -358,6 +389,39 @@ export default function AdminProducts() {
   const [parsedCountries, setParsedCountries] = useState([]);
   const [countryBulkSaving, setCountryBulkSaving] = useState(false);
 
+  const [categoryMapping, setCategoryMapping] = useState(false);
+
+  async function handleAutoMapCategories() {
+    // 카테고리가 제품명과 동일하거나 CATEGORIES에 없는 제품 필터링
+    const needsUpdate = products.filter(p =>
+      p.name === p.category || !CATEGORIES.includes(p.category)
+    );
+    if (needsUpdate.length === 0) {
+      alert('모든 제품의 카테고리가 이미 설정되어 있습니다.');
+      return;
+    }
+    const mappings = needsUpdate.map(p => ({
+      id: p.id,
+      name: p.name,
+      oldCategory: p.category,
+      newCategory: autoMapCategory(p.name),
+    }));
+    const summary = mappings.map(m => `${m.name}: ${m.oldCategory} → ${m.newCategory}`).join('\n');
+    if (!confirm(`${mappings.length}개 제품의 카테고리를 자동 매핑합니다:\n\n${summary}\n\n진행하시겠습니까?`)) return;
+    setCategoryMapping(true);
+    try {
+      for (const m of mappings) {
+        await updateDoc(doc(db, 'products', m.id), { category: m.newCategory });
+      }
+      alert(`${mappings.length}개 제품의 카테고리가 업데이트되었습니다.`);
+      fetchData();
+    } catch (error) {
+      console.error('카테고리 매핑 실패:', error);
+      alert('일부 제품 업데이트 중 오류가 발생했습니다.');
+    }
+    setCategoryMapping(false);
+  }
+
   function toggleSelect(id) {
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -638,6 +702,15 @@ export default function AdminProducts() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-100">제품 관리</h1>
         <div className="flex gap-2">
+          {products.some(p => p.name === p.category || !CATEGORIES.includes(p.category)) && (
+            <button
+              onClick={handleAutoMapCategories}
+              disabled={categoryMapping}
+              className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition disabled:opacity-50"
+            >
+              {categoryMapping ? '매핑 중...' : '카테고리 자동 매핑'}
+            </button>
+          )}
           <button
             onClick={() => { setShowCountryMgmt(!showCountryMgmt); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
