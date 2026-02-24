@@ -125,7 +125,7 @@ export default function AdminDashboard() {
               <h1 style="color: #8b5cf6; font-size: 24px; margin: 0;">HIBOS Export</h1>
             </div>
             <h2 style="color: #333; font-size: 18px;">${emailForm.subject}</h2>
-            <div style="color: #555; line-height: 1.8; font-size: 14px; white-space: pre-line;">${emailForm.body}</div>
+            <div style="color: #555; line-height: 1.8; font-size: 14px;">${emailForm.body.replace(/\n/g, '<br/>')}</div>
             ${getSignatureHtml()}
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
             <p style="color: #999; font-size: 12px; line-height: 1.6;">
