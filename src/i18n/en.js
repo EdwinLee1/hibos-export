@@ -113,4 +113,21 @@ export default {
   common: {
     all: 'All',
   },
+  categoryMap: {
+    '스킨케어': 'Skincare',
+    '크림/로션': 'Cream / Lotion',
+    '에센스/세럼': 'Essence / Serum',
+    '클렌징': 'Cleansing',
+    '선케어': 'Sun Care',
+    '마스크팩': 'Sheet Mask',
+    '아이케어': 'Eye Care',
+    '립케어': 'Lip Care',
+    '바디케어': 'Body Care',
+    '헤어케어': 'Hair Care',
+    '네일케어': 'Nail Care',
+    '향수/디퓨저': 'Fragrance / Diffuser',
+    '남성화장품': "Men's Grooming",
+    '유아화장품': 'Baby Care',
+    '기타': 'Others',
+  },
 };

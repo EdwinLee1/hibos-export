@@ -10,7 +10,7 @@ const emptyEntry = () => ({ customProductName: '', imageFiles: [], imageUrls: []
 export default function ProductSelect() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, tc } = useLanguage();
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState({});
   const [companyInfo, setCompanyInfo] = useState(location.state || null);
@@ -305,7 +305,7 @@ export default function ProductSelect() {
                   <input type="checkbox" checked={isSelected} onChange={() => toggleProduct(product.id)} className="mt-1 h-5 w-5 accent-purple-500 rounded" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="bg-purple-500/15 text-purple-300 text-xs font-medium px-2 py-0.5 rounded">{product.category}</span>
+                      <span className="bg-purple-500/15 text-purple-300 text-xs font-medium px-2 py-0.5 rounded">{tc(product.category)}</span>
                       <h3 className="font-semibold text-gray-100 text-sm sm:text-base">{product.name}</h3>
                       {entries.length > 1 && (
                         <span className="bg-primary-light text-primary text-xs font-medium px-2 py-0.5 rounded-full">{entries.length}{t('products.registered')}</span>

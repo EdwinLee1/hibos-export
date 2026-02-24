@@ -25,8 +25,12 @@ export function LanguageProvider({ children }) {
     return result ?? key;
   }
 
+  function tc(category) {
+    return translations[lang]?.categoryMap?.[category] ?? category;
+  }
+
   return (
-    <LanguageContext.Provider value={{ lang, setLang: changeLang, t }}>
+    <LanguageContext.Provider value={{ lang, setLang: changeLang, t, tc }}>
       {children}
     </LanguageContext.Provider>
   );

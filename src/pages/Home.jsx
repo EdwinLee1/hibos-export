@@ -4,7 +4,7 @@ import { db } from '../firebase/config';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { t, tc } = useLanguage();
   const [products, setProducts] = useState([]);
   const [countries, setCountries] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -28,7 +28,7 @@ export default function Home() {
     fetchData();
   }, []);
 
-  const categories = [t('common.all'), ...new Set(products.map(p => p.category))];
+  const rawCategories = [...new Set(products.map(p => p.category))];
   const filteredProducts = selectedCategory == null
     ? products
     : products.filter(p => p.category === selectedCategory);
@@ -89,10 +89,13 @@ export default function Home() {
                     : 'border-border hover:border-border-light'
                 }`}
               >
-                <div className="flex items-center gap-2 sm:gap-3 mb-1 flex-wrap">
+                <div className="flex items-center gap-2 sm:gap-3 mb-1">
                   <span className="bg-primary-light text-primary text-sm font-medium px-3 py-1 rounded-full">{country.code}</span>
                   {country.name && <span className="font-semibold text-gray-100 text-sm sm:text-base">{country.name}</span>}
                   <span className="text-xs sm:text-sm text-gray-500">{country.products.length}{t('home.productsCount')}</span>
+                  <svg className={`w-4 h-4 text-gray-400 ml-auto transition-transform ${expandedCountry === country.code ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
                 {expandedCountry === country.code && (
                   <div className="mt-3 space-y-3">
@@ -106,7 +109,7 @@ export default function Home() {
                       <p className="text-sm text-gray-400 mb-1">{t('home.categories')}</p>
                       <div className="flex flex-wrap gap-1">
                         {[...country.categories].map((cat, i) => (
-                          <span key={i} className="bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded">{cat}</span>
+                          <span key={i} className="bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded">{tc(cat)}</span>
                         ))}
                       </div>
                     </div>
@@ -137,17 +140,27 @@ export default function Home() {
       <section>
         <h2 className="text-lg sm:text-xl font-semibold text-gray-200 mb-4">{t('home.productSection')}</h2>
         <div className="flex gap-2 mb-4 flex-wrap">
-          {categories.map((cat, idx) => (
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition ${
+              selectedCategory == null
+                ? 'bg-primary text-white'
+                : 'bg-surface text-gray-400 border border-border hover:border-border-light'
+            }`}
+          >
+            {t('common.all')}
+          </button>
+          {rawCategories.map(cat => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(idx === 0 ? null : cat)}
+              onClick={() => setSelectedCategory(cat)}
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition ${
-                (idx === 0 && selectedCategory == null) || selectedCategory === cat
+                selectedCategory === cat
                   ? 'bg-primary text-white'
                   : 'bg-surface text-gray-400 border border-border hover:border-border-light'
               }`}
             >
-              {cat}
+              {tc(cat)}
             </button>
           ))}
         </div>
@@ -174,7 +187,7 @@ export default function Home() {
                       <td className="px-3 py-3 text-gray-500 font-mono text-xs">{index + 1}</td>
                       <td className="px-4 py-3"><span className="font-medium text-gray-100">{product.name}</span></td>
                       <td className="px-4 py-3">
-                        <span className="bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded">{product.category}</span>
+                        <span className="bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded">{tc(product.category)}</span>
                       </td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{(product.ingredients || []).join(', ')}</td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{(product.functions || []).join(', ')}</td>
@@ -199,7 +212,7 @@ export default function Home() {
                     <span className="text-gray-500 font-mono text-xs mt-0.5">{index + 1}</span>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-100 text-sm">{product.name}</h3>
-                      <span className="inline-block bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded mt-1">{product.category}</span>
+                      <span className="inline-block bg-purple-500/15 text-purple-300 text-xs px-2 py-0.5 rounded mt-1">{tc(product.category)}</span>
                     </div>
                   </div>
                   {(product.ingredients || []).length > 0 && (
