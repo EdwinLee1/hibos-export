@@ -34,6 +34,19 @@ body {
   background: #4d4d65;
 }
 
+/* Clickable elements pointer cursor */
+button,
+[role="button"],
+a,
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+label[for],
+.cursor-pointer {
+  cursor: pointer;
+}
+
 /* Select option styling */
 select option {
   background-color: #1a1a2e;
