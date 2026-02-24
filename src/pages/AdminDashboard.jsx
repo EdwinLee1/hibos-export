@@ -21,6 +21,8 @@ export default function AdminDashboard() {
   const [emailSending, setEmailSending] = useState(false);
   const [welcomeEmailModal, setWelcomeEmailModal] = useState(null);
   const [welcomeSending, setWelcomeSending] = useState(false);
+  const [signatureUrl, setSignatureUrl] = useState('');
+  const [includeSignature, setIncludeSignature] = useState(true);
 
   async function fetchAll() {
     try {
@@ -37,6 +39,12 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => { fetchAll(); }, []);
+
+  useEffect(() => {
+    getDownloadURL(ref(storage, 'admin/email-signature.png'))
+      .then(url => setSignatureUrl(url))
+      .catch(() => {});
+  }, []);
 
   async function handleRequestReview(id) { try { await updateDoc(doc(db, 'companyRequests', id), { status: 'reviewed' }); fetchAll(); } catch (error) { console.error('상태 업데이트 실패:', error); } }
   async function handleRequestDelete(id) { if (!confirm('이 요청을 삭제하시겠습니까?')) return; try { await deleteDoc(doc(db, 'companyRequests', id)); fetchAll(); } catch (error) { console.error('삭제 실패:', error); } }
@@ -63,6 +71,28 @@ export default function AdminDashboard() {
       if (editingCompany?.id === company.id) setEditingCompany(null);
       fetchAll();
     } catch (error) { console.error('업체 삭제 실패:', error); alert('삭제 중 오류가 발생했습니다.'); }
+  }
+
+  async function handleSignatureUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('이미지는 5MB 이하만 가능합니다.'); return; }
+    try {
+      const storageRef = ref(storage, 'admin/email-signature.png');
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setSignatureUrl(url);
+      alert('서명 이미지가 등록되었습니다.');
+    } catch (error) {
+      console.error('서명 업로드 실패:', error);
+      alert('서명 이미지 업로드에 실패했습니다.');
+    }
+    e.target.value = '';
+  }
+
+  function getSignatureHtml() {
+    if (!includeSignature || !signatureUrl) return '';
+    return `<div style="margin-top: 20px;"><img src="${signatureUrl}" alt="서명" style="max-width: 320px; border-radius: 8px;" /></div>`;
   }
 
   function openEmailModal(company) {
@@ -96,6 +126,7 @@ export default function AdminDashboard() {
             </div>
             <h2 style="color: #333; font-size: 18px;">${emailForm.subject}</h2>
             <div style="color: #555; line-height: 1.8; font-size: 14px; white-space: pre-line;">${emailForm.body}</div>
+            ${getSignatureHtml()}
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
             <p style="color: #999; font-size: 12px; line-height: 1.6;">
               상호명: 히보스 | 대표자: 이주호<br/>
@@ -470,6 +501,30 @@ export default function AdminDashboard() {
                       }} />
                   </label>
                 </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-gray-400">서명 (명함 이미지)</label>
+                  <label className="flex items-center gap-2 text-xs text-gray-400">
+                    <input type="checkbox" checked={includeSignature} onChange={e => setIncludeSignature(e.target.checked)}
+                      className="rounded border-border" />
+                    메일에 포함
+                  </label>
+                </div>
+                {signatureUrl ? (
+                  <div className="space-y-2">
+                    <img src={signatureUrl} alt="서명" className="max-w-[200px] rounded-lg border border-border" />
+                    <label className="inline-flex items-center gap-2 text-xs text-gray-500 cursor-pointer hover:text-primary transition">
+                      <span>이미지 변경</span>
+                      <input type="file" accept="image/*" className="hidden" onChange={handleSignatureUpload} />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="inline-flex items-center gap-2 bg-surface-dark border border-border-light rounded-lg px-4 py-2 text-sm text-gray-400 cursor-pointer hover:border-primary hover:text-primary transition">
+                    <span>+ 명함 이미지 등록</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleSignatureUpload} />
+                  </label>
+                )}
               </div>
               <div className="flex gap-2 pt-2">
                 <button onClick={handleSendEmail} disabled={emailSending || !emailForm.subject || !emailForm.body}
