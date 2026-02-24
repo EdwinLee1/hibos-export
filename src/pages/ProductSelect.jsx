@@ -3,12 +3,14 @@ import { collection, getDocs, addDoc, query, where, deleteDoc, doc, serverTimest
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const emptyEntry = () => ({ customProductName: '', imageFiles: [], imageUrls: [], imagePreviews: [], moq: '', cartonQuantity: '', wholesalePrice: '', deliveryPeriod: '' });
 
 export default function ProductSelect() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState({});
   const [companyInfo, setCompanyInfo] = useState(location.state || null);
@@ -35,7 +37,7 @@ export default function ProductSelect() {
     try {
       const q = query(collection(db, 'companies'), where('email', '==', verifyForm.email), where('businessNumber', '==', verifyForm.businessNumber));
       const snap = await getDocs(q);
-      if (snap.empty) { alert('등록된 업체 정보를 찾을 수 없습니다. 이메일과 사업자번호를 확인해주세요.'); return; }
+      if (snap.empty) { alert(t('products.verifyFail')); return; }
       const companyDoc = snap.docs[0];
       setCompanyInfo({ companyId: companyDoc.id, companyName: companyDoc.data().companyName, email: companyDoc.data().email, businessNumber: companyDoc.data().businessNumber });
 
@@ -62,7 +64,7 @@ export default function ProductSelect() {
         }
       });
       setSelectedProducts(existing);
-    } catch (error) { console.error('인증 실패:', error); alert('오류가 발생했습니다.'); }
+    } catch (error) { console.error('인증 실패:', error); alert(t('products.verifyError')); }
   }
 
   function toggleProduct(productId) {
@@ -109,7 +111,7 @@ export default function ProductSelect() {
       const remaining = 3 - totalImages;
 
       if (remaining <= 0) {
-        alert('이미지는 최대 3장까지 업로드할 수 있습니다.');
+        alert(t('products.imageMaxAlert'));
         return prev;
       }
 
@@ -172,13 +174,13 @@ export default function ProductSelect() {
   }
 
   async function handleRequestSubmit() {
-    if (!requestText.trim()) { alert('수출 희망 품목을 입력해주세요.'); return; }
+    if (!requestText.trim()) { alert(t('products.requestEmpty')); return; }
     setRequestSubmitting(true);
     try {
       await addDoc(collection(db, 'companyRequests'), { companyId: companyInfo.companyId, companyName: companyInfo.companyName, email: companyInfo.email, requestText: requestText.trim(), status: 'pending', createdAt: serverTimestamp() });
-      alert('수출 희망 품목이 전달되었습니다. 관리자 검토 후 제품 목록에 반영됩니다.');
+      alert(t('products.requestSuccess'));
       setRequestText('');
-    } catch (error) { console.error('요청 저장 실패:', error); alert('저장 중 오류가 발생했습니다.'); }
+    } catch (error) { console.error('요청 저장 실패:', error); alert(t('products.requestFail')); }
     setRequestSubmitting(false);
   }
 
@@ -188,7 +190,7 @@ export default function ProductSelect() {
         const info = entries[i];
         if (!info.moq || !info.cartonQuantity || !info.wholesalePrice || !info.deliveryPeriod) {
           const product = products.find(p => p.id === productId);
-          alert(`"${product?.name}" ${entries.length > 1 ? `#${i + 1} ` : ''}제품의 필수 항목(MOQ, 입수량, 도매가, 납품기간)을 입력해주세요.`);
+          alert(`"${product?.name}" ${entries.length > 1 ? `#${i + 1} ` : ''}${t('products.requiredAlert')}`);
           return;
         }
       }
@@ -226,7 +228,7 @@ export default function ProductSelect() {
         }
       }
       setSuccess(true);
-    } catch (error) { console.error('저장 실패:', error); alert('저장 중 오류가 발생했습니다.'); }
+    } catch (error) { console.error('저장 실패:', error); alert(t('products.saveFail')); }
     setSubmitting(false);
   }
 
@@ -242,9 +244,9 @@ export default function ProductSelect() {
     return (
       <div className="max-w-md mx-auto text-center py-16">
         <div className="text-5xl mb-4 text-green-400">&#10003;</div>
-        <h2 className="text-2xl font-bold text-gray-100 mb-2">납품 정보 저장 완료!</h2>
-        <p className="text-gray-400 mb-6">관리자가 확인 후 연락드리겠습니다.</p>
-        <button onClick={() => navigate('/')} className="bg-primary text-white px-6 py-2.5 rounded-lg font-medium hover:bg-primary-dark transition">메인으로 돌아가기</button>
+        <h2 className="text-2xl font-bold text-gray-100 mb-2">{t('products.successTitle')}</h2>
+        <p className="text-gray-400 mb-6">{t('products.successMsg')}</p>
+        <button onClick={() => navigate('/')} className="bg-primary text-white px-6 py-2.5 rounded-lg font-medium hover:bg-primary-dark transition">{t('products.goHome')}</button>
       </div>
     );
   }
@@ -253,37 +255,44 @@ export default function ProductSelect() {
     return (
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-100 mb-2">납품 제품 등록</h1>
-          <p className="text-gray-400">등록된 업체 정보로 본인 확인을 해주세요</p>
+          <h1 className="text-2xl font-bold text-gray-100 mb-2">{t('products.title')}</h1>
+          <p className="text-gray-400">{t('products.verifySubtitle')}</p>
         </div>
         <form onSubmit={handleVerify} className="bg-surface rounded-xl p-6 border border-border space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">이메일</label>
-            <input type="email" value={verifyForm.email} onChange={e => setVerifyForm(prev => ({ ...prev, email: e.target.value }))} className={inputClass} placeholder="등록 시 입력한 이메일" required />
+            <label className="block text-sm font-medium text-gray-300 mb-1">{t('products.verifyEmail')}</label>
+            <input type="email" value={verifyForm.email} onChange={e => setVerifyForm(prev => ({ ...prev, email: e.target.value }))} className={inputClass} placeholder={t('products.verifyEmailPH')} required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">사업자번호</label>
-            <input type="text" value={verifyForm.businessNumber} onChange={e => setVerifyForm(prev => ({ ...prev, businessNumber: e.target.value }))} className={inputClass} placeholder="000-00-00000" required />
+            <label className="block text-sm font-medium text-gray-300 mb-1">{t('products.verifyBizNumber')}</label>
+            <input type="text" value={verifyForm.businessNumber} onChange={e => setVerifyForm(prev => ({ ...prev, businessNumber: e.target.value }))} className={inputClass} placeholder={t('products.verifyBizNumberPH')} required />
           </div>
-          <button type="submit" className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary-dark transition">본인 확인</button>
+          <button type="submit" className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary-dark transition">{t('products.verifyButton')}</button>
           <p className="text-center text-sm text-gray-500">
-            업체 등록이 아직 안 되셨나요?{' '}
-            <button type="button" onClick={() => navigate('/register')} className="text-primary hover:underline">업체 등록하기</button>
+            {t('products.notRegistered')}{' '}
+            <button type="button" onClick={() => navigate('/register')} className="text-primary hover:underline">{t('products.goRegister')}</button>
           </p>
         </form>
       </div>
     );
   }
 
+  const entryFields = [
+    { field: 'moq', label: t('products.moq'), type: 'number', placeholder: t('products.moqPH') },
+    { field: 'cartonQuantity', label: t('products.cartonQty'), type: 'number', placeholder: t('products.cartonQtyPH') },
+    { field: 'wholesalePrice', label: t('products.wholesalePrice'), type: 'number', placeholder: t('products.wholesalePricePH') },
+    { field: 'deliveryPeriod', label: t('products.deliveryPeriod'), type: 'text', placeholder: t('products.deliveryPeriodPH') },
+  ];
+
   return (
     <div>
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-100 mb-2">납품 가능 제품 선택</h1>
-        <p className="text-gray-400"><span className="font-medium text-primary">{companyInfo.companyName}</span>에서 납품 가능한 제품을 선택하고 정보를 입력해주세요</p>
+        <h1 className="text-2xl font-bold text-gray-100 mb-2">{t('products.selectTitle')}</h1>
+        <p className="text-gray-400"><span className="font-medium text-primary">{companyInfo.companyName}</span>{t('products.selectSubtitle')}</p>
       </div>
 
       {products.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">등록된 제품이 없습니다.</p>
+        <p className="text-gray-500 text-center py-8">{t('products.noProducts')}</p>
       ) : (
         <div className="space-y-4">
           {products.map(product => {
@@ -291,60 +300,58 @@ export default function ProductSelect() {
             const isSelected = entries.length > 0;
 
             return (
-              <div key={product.id} className={`bg-surface rounded-xl p-5 border transition ${isSelected ? 'border-primary shadow-lg shadow-primary/5' : 'border-border'}`}>
+              <div key={product.id} className={`bg-surface rounded-xl p-4 sm:p-5 border transition ${isSelected ? 'border-primary shadow-lg shadow-primary/5' : 'border-border'}`}>
                 <div className="flex items-start gap-3">
                   <input type="checkbox" checked={isSelected} onChange={() => toggleProduct(product.id)} className="mt-1 h-5 w-5 accent-purple-500 rounded" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="bg-purple-500/15 text-purple-300 text-xs font-medium px-2 py-0.5 rounded">{product.category}</span>
-                      <h3 className="font-semibold text-gray-100">{product.name}</h3>
+                      <h3 className="font-semibold text-gray-100 text-sm sm:text-base">{product.name}</h3>
                       {entries.length > 1 && (
-                        <span className="bg-primary-light text-primary text-xs font-medium px-2 py-0.5 rounded-full">{entries.length}개 등록</span>
+                        <span className="bg-primary-light text-primary text-xs font-medium px-2 py-0.5 rounded-full">{entries.length}{t('products.registered')}</span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-400">{product.description}</p>
+                    <p className="text-xs sm:text-sm text-gray-400">{product.description}</p>
                   </div>
                 </div>
 
                 {isSelected && (
-                  <div className="mt-4 ml-8 space-y-4">
+                  <div className="mt-4 ml-0 sm:ml-8 space-y-4">
                     {entries.map((entry, entryIndex) => {
                       const totalImages = (entry.imageUrls?.length || 0) + (entry.imageFiles?.length || 0);
                       return (
-                        <div key={entryIndex} className={`space-y-4 ${entries.length > 1 ? 'bg-surface-dark rounded-xl p-4 border border-border relative' : ''}`}>
+                        <div key={entryIndex} className={`space-y-4 ${entries.length > 1 ? 'bg-surface-dark rounded-xl p-3 sm:p-4 border border-border relative' : ''}`}>
                           {entries.length > 1 && (
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-medium text-primary">#{entryIndex + 1}</span>
                               <button type="button" onClick={() => removeEntry(product.id, entryIndex)}
-                                className="text-red-400 hover:text-red-300 text-xs hover:underline">삭제</button>
+                                className="text-red-400 hover:text-red-300 text-xs hover:underline">{t('products.delete')}</button>
                             </div>
                           )}
 
-                          {/* 자사 제품명 */}
                           <div>
-                            <label className="block text-xs text-gray-400 mb-1">자사 브랜드 제품명</label>
+                            <label className="block text-xs text-gray-400 mb-1">{t('products.customProductName')}</label>
                             <input
                               type="text"
                               value={entry.customProductName || ''}
                               onChange={e => updateEntryInfo(product.id, entryIndex, 'customProductName', e.target.value)}
                               className={inputClass}
-                              placeholder="예: 히보스 프리미엄 수분크림"
+                              placeholder={t('products.customProductNamePH')}
                             />
                           </div>
 
-                          {/* 제품 이미지 업로드 */}
                           <div>
-                            <label className="block text-xs text-gray-400 mb-2">제품 이미지 (최대 3장)</label>
-                            <div className="flex gap-3 flex-wrap">
+                            <label className="block text-xs text-gray-400 mb-2">{t('products.productImages')}</label>
+                            <div className="flex gap-2 sm:gap-3 flex-wrap">
                               {(entry.imagePreviews || []).map((preview, idx) => (
                                 <div key={idx} className="relative group">
-                                  <img src={preview} alt={`제품 이미지 ${idx + 1}`} className="w-24 h-24 object-cover rounded-lg border border-border" />
+                                  <img src={preview} alt={`${idx + 1}`} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-border" />
                                   <button type="button" onClick={() => removeImage(product.id, entryIndex, idx)}
                                     className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition">x</button>
                                 </div>
                               ))}
                               {totalImages < 3 && (
-                                <label className="w-24 h-24 border-2 border-dashed border-border-light rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary-light transition">
+                                <label className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-dashed border-border-light rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary-light transition">
                                   <span className="text-2xl text-gray-500">+</span>
                                   <span className="text-xs text-gray-500 mt-1">{totalImages}/3</span>
                                   <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden"
@@ -352,17 +359,11 @@ export default function ProductSelect() {
                                 </label>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP (각 5MB 이하)</p>
+                            <p className="text-xs text-gray-500 mt-1">{t('products.imageFormats')}</p>
                           </div>
 
-                          {/* 기존 입력 필드들 */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                            {[
-                              { field: 'moq', label: 'MOQ (최소주문수량) *', type: 'number', placeholder: '예: 1000' },
-                              { field: 'cartonQuantity', label: '카툰박스 입수량 *', type: 'number', placeholder: '예: 50' },
-                              { field: 'wholesalePrice', label: '도매가 (원) *', type: 'number', placeholder: '예: 5000' },
-                              { field: 'deliveryPeriod', label: '납품 가능 기간 *', type: 'text', placeholder: '예: 2주' },
-                            ].map(({ field, label, type, placeholder }) => (
+                            {entryFields.map(({ field, label, type, placeholder }) => (
                               <div key={field}>
                                 <label className="block text-xs text-gray-400 mb-1">{label}</label>
                                 <input type={type} value={entry[field] || ''} onChange={e => updateEntryInfo(product.id, entryIndex, field, e.target.value)} className={inputClass} placeholder={placeholder} />
@@ -373,10 +374,9 @@ export default function ProductSelect() {
                       );
                     })}
 
-                    {/* + 제품 추가 버튼 */}
                     <button type="button" onClick={() => addEntry(product.id)}
                       className="w-full py-2.5 border-2 border-dashed border-border-light rounded-xl text-sm text-gray-400 hover:border-primary hover:text-primary hover:bg-primary-light transition flex items-center justify-center gap-2">
-                      <span className="text-lg">+</span> 같은 제품 추가 등록
+                      <span className="text-lg">+</span> {t('products.addMore')}
                     </button>
                   </div>
                 )}
@@ -386,22 +386,22 @@ export default function ProductSelect() {
           <div className="text-center pt-4">
             <button onClick={handleSubmit} disabled={submitting || totalEntries === 0}
               className="bg-primary text-white px-8 py-3 rounded-lg font-medium hover:bg-primary-dark transition disabled:opacity-50">
-              {submitting ? '저장 중...' : `총 ${totalEntries}개 제품 저장`}
+              {submitting ? t('products.saving') : t('products.saveButton').replace('{count}', totalEntries)}
             </button>
           </div>
         </div>
       )}
 
       {companyInfo && (
-        <div className="mt-8 bg-surface rounded-xl p-6 border border-border">
-          <h2 className="text-lg font-semibold text-gray-100 mb-2">수출 희망 품목 직접 입력</h2>
-          <p className="text-sm text-gray-400 mb-4">위 목록에 없는 제품이 있다면, 수출하고 싶은 품목을 자유롭게 입력해주세요.</p>
+        <div className="mt-8 bg-surface rounded-xl p-4 sm:p-6 border border-border">
+          <h2 className="text-lg font-semibold text-gray-100 mb-2">{t('products.requestTitle')}</h2>
+          <p className="text-sm text-gray-400 mb-4">{t('products.requestDesc')}</p>
           <textarea value={requestText} onChange={e => setRequestText(e.target.value)} rows={5}
             className="w-full bg-surface-dark border border-border-light rounded-lg px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-500 mb-3"
-            placeholder="예: 마스크팩, 세럼, 선크림 수출 희망합니다." />
+            placeholder={t('products.requestPH')} />
           <button onClick={handleRequestSubmit} disabled={requestSubmitting || !requestText.trim()}
             className="bg-green-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50">
-            {requestSubmitting ? '전송 중...' : '희망 품목 전달하기'}
+            {requestSubmitting ? t('products.requestSending') : t('products.requestButton')}
           </button>
         </div>
       )}
