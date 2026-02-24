@@ -193,7 +193,7 @@ export default function Home() {
         <p>상호명: 히보스 | 대표자: 이주호</p>
         <p>사업자등록번호: 135-41-00648 | 통신판매업신고: 제 2020-인천서구-0504호</p>
         <p>주소: 인천시 서구 완정로 154 | 이메일: info@hibos.co.kr</p>
-        <p className="text-gray-600 mt-2">&copy; 2025 HIBOS. All rights reserved.</p>
+        <p className="text-gray-600 mt-2">&copy; 2026 HIBOS. All rights reserved.</p>
       </footer>
     </div>
   );

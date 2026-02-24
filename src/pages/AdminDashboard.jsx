@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { db, storage } from '../firebase/config';
 
 export default function AdminDashboard() {
   const [companies, setCompanies] = useState([]);
@@ -13,6 +15,10 @@ export default function AdminDashboard() {
   const [editingCompany, setEditingCompany] = useState(null);
   const [companyForm, setCompanyForm] = useState({ companyName: '', businessNumber: '', representative: '', phone: '', email: '' });
   const [previewImage, setPreviewImage] = useState(null);
+  const [emailModal, setEmailModal] = useState(null);
+  const [emailForm, setEmailForm] = useState({ subject: '', body: '' });
+  const [emailFiles, setEmailFiles] = useState([]);
+  const [emailSending, setEmailSending] = useState(false);
 
   async function fetchAll() {
     try {
@@ -55,6 +61,56 @@ export default function AdminDashboard() {
       if (editingCompany?.id === company.id) setEditingCompany(null);
       fetchAll();
     } catch (error) { console.error('업체 삭제 실패:', error); alert('삭제 중 오류가 발생했습니다.'); }
+  }
+
+  function openEmailModal(company) {
+    setEmailModal(company);
+    setEmailForm({ subject: '', body: '' });
+    setEmailFiles([]);
+  }
+
+  async function handleSendEmail() {
+    if (!emailForm.subject || !emailForm.body) { alert('제목과 내용을 입력해주세요.'); return; }
+    setEmailSending(true);
+    try {
+      // PDF 파일 업로드
+      const attachmentPaths = [];
+      for (const file of emailFiles) {
+        const storagePath = `email-attachments/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, storagePath);
+        await uploadBytes(storageRef, file);
+        attachmentPaths.push(storagePath);
+      }
+
+      const functions = getFunctions(undefined, 'asia-northeast3');
+      const sendEmail = httpsCallable(functions, 'sendEmail');
+      await sendEmail({
+        to: emailModal.email,
+        subject: emailForm.subject,
+        html: `
+          <div style="font-family: 'Noto Sans KR', sans-serif; max-width: 560px; margin: 0 auto; padding: 30px 20px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h1 style="color: #8b5cf6; font-size: 24px; margin: 0;">HIBOS Export</h1>
+            </div>
+            <h2 style="color: #333; font-size: 18px;">${emailForm.subject}</h2>
+            <div style="color: #555; line-height: 1.8; font-size: 14px; white-space: pre-line;">${emailForm.body}</div>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+            <p style="color: #999; font-size: 12px; line-height: 1.6;">
+              상호명: 히보스 | 대표자: 이주호<br/>
+              사업자등록번호: 135-41-00648<br/>
+              이메일: info@hibos.co.kr
+            </p>
+          </div>
+        `,
+        attachmentPaths,
+      });
+      alert(`${emailModal.companyName} (${emailModal.email})에 메일을 발송했습니다.`);
+      setEmailModal(null);
+    } catch (error) {
+      console.error('메일 발송 실패:', error);
+      alert('메일 발송 중 오류가 발생했습니다.');
+    }
+    setEmailSending(false);
   }
 
   function getCompanyProducts(companyId) { return companyProducts.filter(cp => cp.companyId === companyId); }
@@ -168,6 +224,7 @@ export default function AdminDashboard() {
                         <span className="bg-primary-light text-primary text-xs font-medium px-2 py-1 rounded-full">{getCompanyProducts(company.id).length}건</span>
                       </td>
                       <td className="px-4 py-3 text-right">
+                        <button onClick={e => { e.stopPropagation(); openEmailModal(company); }} className="text-green-400 hover:underline mr-3 text-xs">메일</button>
                         <button onClick={e => { e.stopPropagation(); handleCompanyEdit(company); }} className="text-primary hover:underline mr-3 text-xs">수정</button>
                         <button onClick={e => { e.stopPropagation(); handleCompanyDelete(company); }} className="text-red-400 hover:underline text-xs">삭제</button>
                       </td>
@@ -310,6 +367,66 @@ export default function AdminDashboard() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {emailModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-5 border-b border-border">
+              <h3 className="font-semibold text-gray-100">메일 발송</h3>
+              <button onClick={() => setEmailModal(null)} className="text-gray-500 hover:text-gray-300 text-lg">&times;</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">수신자</label>
+                <p className="text-sm text-gray-100">{emailModal.companyName} &lt;{emailModal.email}&gt;</p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">제목 *</label>
+                <input type="text" value={emailForm.subject} onChange={e => setEmailForm(prev => ({ ...prev, subject: e.target.value }))}
+                  className={inputClass} placeholder="메일 제목을 입력하세요" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">내용 *</label>
+                <textarea value={emailForm.body} onChange={e => setEmailForm(prev => ({ ...prev, body: e.target.value }))}
+                  rows={8} className={inputClass} placeholder="메일 내용을 입력하세요" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2">첨부파일 (PDF)</label>
+                <div className="space-y-2">
+                  {emailFiles.map((file, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-surface-dark rounded-lg px-3 py-2 text-sm">
+                      <span className="text-gray-300 flex-1 truncate">{file.name}</span>
+                      <span className="text-gray-500 text-xs">{(file.size / 1024 / 1024).toFixed(1)}MB</span>
+                      <button onClick={() => setEmailFiles(prev => prev.filter((_, idx) => idx !== i))}
+                        className="text-red-400 hover:text-red-300 text-xs">삭제</button>
+                    </div>
+                  ))}
+                  <label className="inline-flex items-center gap-2 bg-surface-dark border border-border-light rounded-lg px-4 py-2 text-sm text-gray-400 cursor-pointer hover:border-primary hover:text-primary transition">
+                    <span>+ 파일 첨부</span>
+                    <input type="file" accept=".pdf" multiple className="hidden"
+                      onChange={e => {
+                        const files = Array.from(e.target.files).filter(f => {
+                          if (f.size > 10 * 1024 * 1024) { alert(`"${f.name}" 파일이 10MB를 초과합니다.`); return false; }
+                          return true;
+                        });
+                        setEmailFiles(prev => [...prev, ...files]);
+                        e.target.value = '';
+                      }} />
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button onClick={handleSendEmail} disabled={emailSending || !emailForm.subject || !emailForm.body}
+                  className="flex-1 bg-green-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50">
+                  {emailSending ? '발송 중...' : '메일 발송'}
+                </button>
+                <button onClick={() => setEmailModal(null)}
+                  className="bg-surface-light text-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-border transition">취소</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
