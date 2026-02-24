@@ -19,6 +19,8 @@ export default function AdminDashboard() {
   const [emailForm, setEmailForm] = useState({ subject: '', body: '' });
   const [emailFiles, setEmailFiles] = useState([]);
   const [emailSending, setEmailSending] = useState(false);
+  const [welcomeEmailModal, setWelcomeEmailModal] = useState(null);
+  const [welcomeSending, setWelcomeSending] = useState(false);
 
   async function fetchAll() {
     try {
@@ -111,6 +113,57 @@ export default function AdminDashboard() {
       alert('메일 발송 중 오류가 발생했습니다.');
     }
     setEmailSending(false);
+  }
+
+  function getWelcomeEmailHtml(company) {
+    return `
+      <div style="font-family: 'Noto Sans KR', sans-serif; max-width: 560px; margin: 0 auto; padding: 30px 20px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #8b5cf6; font-size: 24px; margin: 0;">HIBOS Export</h1>
+        </div>
+        <h2 style="color: #333; font-size: 18px;">안녕하세요, ${company.companyName} ${company.representative || ''}님!</h2>
+        <p style="color: #555; line-height: 1.8; font-size: 14px;">
+          HIBOS Export 플랫폼에 업체 등록해 주셔서 진심으로 감사드립니다.
+        </p>
+        <p style="color: #555; line-height: 1.8; font-size: 14px;">
+          등록하신 정보를 확인 후, 빠른 시일 내에 연락드리겠습니다.<br/>
+          납품 가능한 제품이 있으시면 아래 링크에서 제품 등록도 진행해 주세요.
+        </p>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="https://hibos-export.com/products"
+            style="display: inline-block; background: #8b5cf6; color: #fff; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">
+            납품 제품 등록하기
+          </a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+        <p style="color: #999; font-size: 12px; line-height: 1.6;">
+          상호명: 히보스 | 대표자: 이주호<br/>
+          사업자등록번호: 135-41-00648<br/>
+          이메일: info@hibos.co.kr
+        </p>
+      </div>
+    `;
+  }
+
+  async function handleSendWelcomeEmail() {
+    if (!welcomeEmailModal) return;
+    setWelcomeSending(true);
+    try {
+      const functions = getFunctions(undefined, 'asia-northeast3');
+      const sendEmail = httpsCallable(functions, 'sendEmail');
+      await sendEmail({
+        to: welcomeEmailModal.email,
+        subject: `[HIBOS] ${welcomeEmailModal.companyName}님, 업체 등록이 완료되었습니다!`,
+        html: getWelcomeEmailHtml(welcomeEmailModal),
+        attachmentPaths: [],
+      });
+      alert(`${welcomeEmailModal.companyName} (${welcomeEmailModal.email})에 감사 메일을 발송했습니다.`);
+      setWelcomeEmailModal(null);
+    } catch (error) {
+      console.error('감사 메일 발송 실패:', error);
+      alert('메일 발송 중 오류가 발생했습니다.');
+    }
+    setWelcomeSending(false);
   }
 
   function getCompanyProducts(companyId) { return companyProducts.filter(cp => cp.companyId === companyId); }
@@ -224,6 +277,7 @@ export default function AdminDashboard() {
                         <span className="bg-primary-light text-primary text-xs font-medium px-2 py-1 rounded-full">{getCompanyProducts(company.id).length}건</span>
                       </td>
                       <td className="px-4 py-3 text-right">
+                        <button onClick={e => { e.stopPropagation(); setWelcomeEmailModal(company); }} className="text-blue-400 hover:underline mr-3 text-xs">감사메일</button>
                         <button onClick={e => { e.stopPropagation(); openEmailModal(company); }} className="text-green-400 hover:underline mr-3 text-xs">메일</button>
                         <button onClick={e => { e.stopPropagation(); handleCompanyEdit(company); }} className="text-primary hover:underline mr-3 text-xs">수정</button>
                         <button onClick={e => { e.stopPropagation(); handleCompanyDelete(company); }} className="text-red-400 hover:underline text-xs">삭제</button>
@@ -423,6 +477,35 @@ export default function AdminDashboard() {
                   {emailSending ? '발송 중...' : '메일 발송'}
                 </button>
                 <button onClick={() => setEmailModal(null)}
+                  className="bg-surface-light text-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-border transition">취소</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {welcomeEmailModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-5 border-b border-border">
+              <h3 className="font-semibold text-gray-100">감사 메일 미리보기</h3>
+              <button onClick={() => setWelcomeEmailModal(null)} className="text-gray-500 hover:text-gray-300 text-lg">&times;</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="flex gap-4 text-sm">
+                <div><span className="text-gray-500">수신:</span> <span className="text-gray-100">{welcomeEmailModal.companyName} &lt;{welcomeEmailModal.email}&gt;</span></div>
+              </div>
+              <div className="text-sm text-gray-300 mb-1">
+                <span className="text-gray-500">제목:</span> [HIBOS] {welcomeEmailModal.companyName}님, 업체 등록이 완료되었습니다!
+              </div>
+              <div className="bg-white rounded-lg p-4 overflow-auto max-h-[50vh]"
+                dangerouslySetInnerHTML={{ __html: getWelcomeEmailHtml(welcomeEmailModal) }} />
+              <div className="flex gap-2 pt-2">
+                <button onClick={handleSendWelcomeEmail} disabled={welcomeSending}
+                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">
+                  {welcomeSending ? '발송 중...' : '감사 메일 발송'}
+                </button>
+                <button onClick={() => setWelcomeEmailModal(null)}
                   className="bg-surface-light text-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-border transition">취소</button>
               </div>
             </div>
