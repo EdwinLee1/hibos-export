@@ -61,19 +61,19 @@ export default function Layout({ children }) {
                 </>
               ) : (
                 <>
-                  <Link to="/" className="text-gray-400 hover:text-primary text-sm font-medium transition">
+                  <Link to="/" className="text-blue-300 hover:text-white text-base font-semibold transition">
                     {t('nav.exportInfo')}
                   </Link>
-                  <Link to="/register" className="text-gray-400 hover:text-primary text-sm font-medium transition">
+                  <Link to="/register" className="text-blue-300 hover:text-white text-base font-semibold transition">
                     {t('nav.companyRegister')}
                   </Link>
-                  <Link to="/products" className="text-gray-400 hover:text-primary text-sm font-medium transition">
+                  <Link to="/products" className="text-blue-300 hover:text-white text-base font-semibold transition">
                     {t('nav.productRegister')}
                   </Link>
                   {!isAdmin && langToggle}
                   <Link
                     to="/admin/login"
-                    className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition"
+                    className="text-gray-500 hover:text-gray-400 text-xs transition"
                   >
                     {t('nav.admin')}
                   </Link>
@@ -125,19 +125,19 @@ export default function Layout({ children }) {
                 </>
               ) : (
                 <>
-                  <Link to="/" onClick={closeMenu} className="block py-2 text-gray-300 hover:text-primary text-sm font-medium">
+                  <Link to="/" onClick={closeMenu} className="block py-2 text-blue-300 hover:text-white text-base font-semibold">
                     {t('nav.exportInfo')}
                   </Link>
-                  <Link to="/register" onClick={closeMenu} className="block py-2 text-gray-300 hover:text-primary text-sm font-medium">
+                  <Link to="/register" onClick={closeMenu} className="block py-2 text-blue-300 hover:text-white text-base font-semibold">
                     {t('nav.companyRegister')}
                   </Link>
-                  <Link to="/products" onClick={closeMenu} className="block py-2 text-gray-300 hover:text-primary text-sm font-medium">
+                  <Link to="/products" onClick={closeMenu} className="block py-2 text-blue-300 hover:text-white text-base font-semibold">
                     {t('nav.productRegister')}
                   </Link>
                   <Link
                     to="/admin/login"
                     onClick={closeMenu}
-                    className="block py-2 text-primary hover:text-primary-dark text-sm font-medium"
+                    className="block py-2 text-gray-500 hover:text-gray-400 text-xs"
                   >
                     {t('nav.admin')}
                   </Link>

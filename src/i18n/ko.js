@@ -23,6 +23,10 @@ export default {
     thFunctions: '기능',
     thCountries: '대상 국가',
     productsCount: '개 제품',
+    statsCompanies: '등록 업체',
+    statsCompaniesUnit: '개 업체 참여 중',
+    statsProducts: '납품 등록 제품',
+    statsProductsUnit: '건 등록 완료',
     footer: {
       companyName: '상호명: 히보스 | 대표자: 이주호',
       bizNumber: '사업자등록번호: 135-41-00648 | 통신판매업신고: 제 2020-인천서구-0504호',
@@ -128,6 +132,9 @@ export default {
     '향수/디퓨저': '향수/디퓨저',
     '남성화장품': '남성화장품',
     '유아화장품': '유아화장품',
+    '메이크업': '메이크업',
+    '기능성화장품': '기능성화장품',
+    '이너뷰티 및 건강기능식품': '이너뷰티 및 건강기능식품',
     '기타': '기타',
   },
 };

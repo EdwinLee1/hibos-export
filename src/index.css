@@ -2,21 +2,14 @@
 
 @theme {
   --font-sans: 'Noto Sans KR', system-ui, sans-serif;
-  --color-primary: #8b5cf6;
-  --color-primary-dark: #7c3aed;
-  --color-primary-light: rgba(139, 92, 246, 0.15);
-  --color-surface: #1a1a2e;
-  --color-surface-light: #25253d;
-  --color-surface-dark: #0f0f1a;
-  --color-border: #2d2d44;
-  --color-border-light: #3d3d55;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background-color: #0f0f1a;
-  color: #e2e8f0;
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  --color-primary-light: rgba(59, 130, 246, 0.15);
+  --color-surface: #0f172a;
+  --color-surface-light: #1e293b;
+  --color-surface-dark: #020617;
+  --color-border: #1e3a5f;
+  --color-border-light: #2d4a6f;
 }
 
 /* Scrollbar styling for dark theme */
@@ -24,14 +17,14 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f0f1a;
+  background: #020617;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3d3d55;
+  background: #2d4a6f;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4d4d65;
+  background: #3d5a7f;
 }
 
 /* Clickable elements pointer cursor */
@@ -49,6 +42,6 @@ label[for],
 
 /* Select option styling */
 select option {
-  background-color: #1a1a2e;
+  background-color: #0f172a;
   color: #e2e8f0;
 }

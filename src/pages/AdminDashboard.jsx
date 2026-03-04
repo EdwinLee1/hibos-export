@@ -3,6 +3,7 @@ import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firesto
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db, storage } from '../firebase/config';
+import AdminBulkProductRegister from './AdminBulkProductRegister';
 
 export default function AdminDashboard() {
   const [companies, setCompanies] = useState([]);
@@ -23,6 +24,13 @@ export default function AdminDashboard() {
   const [welcomeSending, setWelcomeSending] = useState(false);
   const [signatureUrl, setSignatureUrl] = useState('');
   const [includeSignature, setIncludeSignature] = useState(true);
+  const [showBulkRegister, setShowBulkRegister] = useState(false);
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState(new Set());
+  const [bulkEmailModal, setBulkEmailModal] = useState(false);
+  const [bulkEmailForm, setBulkEmailForm] = useState({ subject: '', body: '' });
+  const [bulkEmailFiles, setBulkEmailFiles] = useState([]);
+  const [bulkSending, setBulkSending] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
   async function fetchAll() {
     try {
@@ -197,6 +205,160 @@ export default function AdminDashboard() {
     setWelcomeSending(false);
   }
 
+  function toggleCompanySelect(companyId, e) {
+    e.stopPropagation();
+    setSelectedCompanyIds(prev => {
+      const next = new Set(prev);
+      if (next.has(companyId)) next.delete(companyId);
+      else next.add(companyId);
+      return next;
+    });
+  }
+
+  function toggleAllCompanies(e) {
+    if (e.target.checked) {
+      setSelectedCompanyIds(new Set(companies.map(c => c.id)));
+    } else {
+      setSelectedCompanyIds(new Set());
+    }
+  }
+
+  function openBulkEmailModal() {
+    setBulkEmailModal(true);
+    setBulkEmailForm({ subject: '', body: '' });
+    setBulkEmailFiles([]);
+    setBulkProgress({ current: 0, total: 0 });
+  }
+
+  async function handleBulkSendEmail() {
+    if (!bulkEmailForm.subject || !bulkEmailForm.body) { alert('제목과 내용을 입력해주세요.'); return; }
+    const targets = companies.filter(c => selectedCompanyIds.has(c.id) && c.email);
+    if (targets.length === 0) { alert('이메일이 있는 업체가 없습니다.'); return; }
+
+    setBulkSending(true);
+    setBulkProgress({ current: 0, total: targets.length });
+
+    const attachmentPaths = [];
+    try {
+      for (const file of bulkEmailFiles) {
+        const storagePath = `email-attachments/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, storagePath);
+        await uploadBytes(storageRef, file);
+        attachmentPaths.push(storagePath);
+      }
+    } catch (error) {
+      console.error('첨부파일 업로드 실패:', error);
+      alert('첨부파일 업로드 중 오류가 발생했습니다.');
+      setBulkSending(false);
+      return;
+    }
+
+    const functions = getFunctions(undefined, 'asia-northeast3');
+    const sendEmailFn = httpsCallable(functions, 'sendEmail');
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < targets.length; i++) {
+      const company = targets[i];
+      setBulkProgress({ current: i + 1, total: targets.length });
+      try {
+        await sendEmailFn({
+          to: company.email,
+          subject: bulkEmailForm.subject,
+          html: `
+            <div style="font-family: 'Noto Sans KR', sans-serif; max-width: 560px; margin: 0 auto; padding: 30px 20px;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <h1 style="color: #8b5cf6; font-size: 24px; margin: 0;">HIBOS Export</h1>
+              </div>
+              <h2 style="color: #333; font-size: 18px;">${bulkEmailForm.subject}</h2>
+              <div style="color: #555; line-height: 1.8; font-size: 14px;">${bulkEmailForm.body.replace(/\n/g, '<br/>')}</div>
+              ${getSignatureHtml()}
+              <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+              <p style="color: #999; font-size: 12px; line-height: 1.6;">
+                상호명: 히보스 | 대표자: 이주호<br/>
+                사업자등록번호: 135-41-00648<br/>
+                이메일: info@hibos.co.kr
+              </p>
+            </div>
+          `,
+          attachmentPaths,
+        });
+        successCount++;
+      } catch (error) {
+        console.error(`메일 발송 실패 (${company.companyName}):`, error);
+        failCount++;
+      }
+    }
+
+    alert(`${targets.length}개 업체 중 ${successCount}개 성공${failCount > 0 ? `, ${failCount}개 실패` : ''}`);
+    setBulkSending(false);
+    setBulkEmailModal(false);
+    setSelectedCompanyIds(new Set());
+  }
+
+  function handleDownloadCompanyPdf(company) {
+    const cps = companyProducts.filter(cp => cp.companyId === company.id);
+    if (cps.length === 0) { alert('등록된 납품 제품이 없습니다.'); return; }
+
+    const productsHtml = cps.map((cp, idx) => {
+      const images = (cp.productImages || [])
+        .map(url => `<img src="${url}" style="width:180px;height:180px;object-fit:cover;border-radius:8px;border:1px solid #ddd;" />`)
+        .join('');
+      return `
+        <div style="margin-bottom:24px;page-break-inside:avoid;">
+          <div style="font-size:15px;font-weight:bold;color:#333;margin-bottom:6px;">
+            ${idx + 1}. ${cp.productName || ''}
+            ${cp.customProductName ? `<span style="color:#7c3aed;font-weight:normal;font-size:12px;"> (${cp.customProductName})</span>` : ''}
+          </div>
+          <table style="font-size:12px;color:#555;margin-bottom:10px;border-collapse:collapse;">
+            <tr>
+              <td style="padding:3px 16px 3px 0;"><b>MOQ:</b> ${cp.moq?.toLocaleString() || '-'}</td>
+              <td style="padding:3px 16px 3px 0;"><b>카툰입수량:</b> ${cp.cartonQuantity?.toLocaleString() || '-'}</td>
+              <td style="padding:3px 16px 3px 0;"><b>도매가:</b> ${cp.wholesalePrice?.toLocaleString() || '-'}원</td>
+              <td style="padding:3px 0;"><b>납품기간:</b> ${cp.deliveryPeriod || '-'}</td>
+            </tr>
+          </table>
+          ${images ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">${images}</div>` : ''}
+          <hr style="border:none;border-top:1px solid #eee;margin:0;" />
+        </div>`;
+    }).join('');
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.'); return; }
+
+    printWindow.document.write(`<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8" />
+<title>${company.companyName} - 납품제품</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: '맑은 고딕', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #fff; color: #333; padding: 30px 40px; }
+  @page { margin: 0; }
+  @media print {
+    body { padding: 20mm 15mm 20mm 15mm; }
+    .no-print { display: none !important; }
+  }
+  img { max-width: 100%; }
+</style>
+</head><body>
+<div class="no-print" style="text-align:center;margin-bottom:20px;">
+  <button onclick="window.print()" style="background:#7c3aed;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:bold;">PDF로 인쇄 / 저장</button>
+  <p style="font-size:12px;color:#999;margin-top:6px;">인쇄 대화상자에서 "PDF로 저장"을 선택하세요</p>
+</div>
+<div style="text-align:center;margin-bottom:24px;">
+  <div style="font-size:24px;font-weight:bold;color:#7c3aed;">HIBOS Export</div>
+  <div style="font-size:18px;font-weight:bold;color:#333;margin-top:8px;">${company.companyName}</div>
+</div>
+<hr style="border:none;border-top:2px solid #ddd;margin-bottom:24px;" />
+<div style="font-size:14px;font-weight:bold;color:#555;margin-bottom:16px;">납품 가능 제품 (${cps.length}건)</div>
+${productsHtml}
+<div style="text-align:center;font-size:13px;color:#888;margin-top:30px;padding-top:14px;border-top:1px solid #eee;">
+  상호명: 히보스 | 대표자: 이주호 | 이메일: info@hibos.co.kr
+</div>
+</body></html>`);
+    printWindow.document.close();
+  }
+
   function getCompanyProducts(companyId) { return companyProducts.filter(cp => cp.companyId === companyId); }
   function getProductSuppliers(productId) { return companyProducts.filter(cp => cp.productId === productId); }
 
@@ -277,7 +439,16 @@ export default function AdminDashboard() {
 
       {viewMode === 'companies' && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-200">등록 업체 목록</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-200">등록 업체 목록</h2>
+            {selectedCompanyIds.size > 0 && (
+              <button onClick={openBulkEmailModal}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                선택 업체 메일 발송 ({selectedCompanyIds.size}개)
+              </button>
+            )}
+          </div>
           {companies.length === 0 ? (
             <p className="text-gray-500 text-center py-8">등록된 업체가 없습니다.</p>
           ) : (
@@ -285,6 +456,10 @@ export default function AdminDashboard() {
               <table className="w-full text-sm">
                 <thead className="bg-surface-dark">
                   <tr>
+                    <th className="px-3 py-3 w-10">
+                      <input type="checkbox" checked={selectedCompanyIds.size === companies.length && companies.length > 0}
+                        onChange={toggleAllCompanies} className="rounded border-border accent-violet-500 cursor-pointer" />
+                    </th>
                     {['회사명','사업자번호','대표자','연락처','이메일','사업자등록증','납품 제품','관리'].map((h, i) => (
                       <th key={h} className={`${i >= 5 ? 'text-center' : 'text-left'} ${i === 7 ? 'text-right' : ''} px-4 py-3 font-medium text-gray-400`}>{h}</th>
                     ))}
@@ -292,8 +467,13 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {companies.map(company => (
-                    <tr key={company.id} className={`hover:bg-surface-light cursor-pointer transition ${selectedCompany?.id === company.id ? 'bg-primary-light' : ''}`}
+                    <tr key={company.id} className={`hover:bg-surface-light cursor-pointer transition ${selectedCompanyIds.has(company.id) ? 'bg-primary/10' : ''} ${selectedCompany?.id === company.id ? 'bg-primary-light' : ''}`}
                       onClick={() => setSelectedCompany(selectedCompany?.id === company.id ? null : company)}>
+                      <td className="px-3 py-3">
+                        <input type="checkbox" checked={selectedCompanyIds.has(company.id)}
+                          onChange={e => toggleCompanySelect(company.id, e)} onClick={e => e.stopPropagation()}
+                          className="rounded border-border accent-violet-500 cursor-pointer" />
+                      </td>
                       <td className="px-4 py-3 font-medium text-gray-100">{company.companyName}</td>
                       <td className="px-4 py-3 text-gray-400">{company.businessNumber}</td>
                       <td className="px-4 py-3 text-gray-400">{company.representative}</td>
@@ -346,7 +526,25 @@ export default function AdminDashboard() {
 
           {selectedCompany && (
             <div className="bg-surface rounded-xl p-5 border border-primary">
-              <h3 className="font-semibold text-gray-100 mb-3">{selectedCompany.companyName}</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-100">{selectedCompany.companyName}</h3>
+                <div className="flex gap-2">
+                  <button onClick={() => handleDownloadCompanyPdf(selectedCompany)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    PDF 다운로드
+                  </button>
+                  <button onClick={() => setShowBulkRegister(true)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    납품 등록 대행
+                  </button>
+                </div>
+              </div>
               <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-4 pb-4 border-b border-border">
                 <span>대표: {selectedCompany.representative}</span>
                 <span>사업자번호: {selectedCompany.businessNumber}</span>
@@ -566,6 +764,104 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {bulkEmailModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-5 border-b border-border">
+              <h3 className="font-semibold text-gray-100">일괄 메일 발송</h3>
+              <button onClick={() => setBulkEmailModal(false)} disabled={bulkSending} className="text-gray-500 hover:text-gray-300 text-lg">&times;</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2">수신자 ({selectedCompanyIds.size}개 업체)</label>
+                <div className="flex flex-wrap gap-1.5 bg-surface-dark rounded-lg p-3 max-h-28 overflow-y-auto">
+                  {companies.filter(c => selectedCompanyIds.has(c.id)).map(c => (
+                    <span key={c.id} className="bg-primary/15 text-primary text-xs px-2 py-1 rounded-full">{c.companyName}</span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">제목 *</label>
+                <input type="text" value={bulkEmailForm.subject} onChange={e => setBulkEmailForm(prev => ({ ...prev, subject: e.target.value }))}
+                  className={inputClass} placeholder="메일 제목을 입력하세요" disabled={bulkSending} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">내용 *</label>
+                <textarea value={bulkEmailForm.body} onChange={e => setBulkEmailForm(prev => ({ ...prev, body: e.target.value }))}
+                  rows={8} className={inputClass} placeholder="메일 내용을 입력하세요" disabled={bulkSending} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2">첨부파일 (PDF)</label>
+                <div className="space-y-2">
+                  {bulkEmailFiles.map((file, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-surface-dark rounded-lg px-3 py-2 text-sm">
+                      <span className="text-gray-300 flex-1 truncate">{file.name}</span>
+                      <span className="text-gray-500 text-xs">{(file.size / 1024 / 1024).toFixed(1)}MB</span>
+                      <button onClick={() => setBulkEmailFiles(prev => prev.filter((_, idx) => idx !== i))}
+                        disabled={bulkSending} className="text-red-400 hover:text-red-300 text-xs">삭제</button>
+                    </div>
+                  ))}
+                  <label className={`inline-flex items-center gap-2 bg-surface-dark border border-border-light rounded-lg px-4 py-2 text-sm text-gray-400 cursor-pointer hover:border-primary hover:text-primary transition ${bulkSending ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <span>+ 파일 첨부</span>
+                    <input type="file" accept=".pdf" multiple className="hidden"
+                      onChange={e => {
+                        const files = Array.from(e.target.files).filter(f => {
+                          if (f.size > 10 * 1024 * 1024) { alert(`"${f.name}" 파일이 10MB를 초과합니다.`); return false; }
+                          return true;
+                        });
+                        setBulkEmailFiles(prev => [...prev, ...files]);
+                        e.target.value = '';
+                      }} />
+                  </label>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-gray-400">서명 (명함 이미지)</label>
+                  <label className="flex items-center gap-2 text-xs text-gray-400">
+                    <input type="checkbox" checked={includeSignature} onChange={e => setIncludeSignature(e.target.checked)}
+                      className="rounded border-border" disabled={bulkSending} />
+                    메일에 포함
+                  </label>
+                </div>
+                {signatureUrl && (
+                  <img src={signatureUrl} alt="서명" className="max-w-[200px] rounded-lg border border-border" />
+                )}
+              </div>
+              {bulkSending && (
+                <div className="bg-surface-dark rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-300">발송 중...</span>
+                    <span className="text-sm text-primary font-medium">{bulkProgress.current} / {bulkProgress.total}</span>
+                  </div>
+                  <div className="w-full bg-border rounded-full h-2">
+                    <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${bulkProgress.total > 0 ? (bulkProgress.current / bulkProgress.total * 100) : 0}%` }} />
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 pt-2">
+                <button onClick={handleBulkSendEmail} disabled={bulkSending || !bulkEmailForm.subject || !bulkEmailForm.body}
+                  className="flex-1 bg-green-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50">
+                  {bulkSending ? `발송 중... (${bulkProgress.current}/${bulkProgress.total})` : `${selectedCompanyIds.size}개 업체에 메일 발송`}
+                </button>
+                <button onClick={() => setBulkEmailModal(false)} disabled={bulkSending}
+                  className="bg-surface-light text-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-border transition disabled:opacity-50">취소</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkRegister && selectedCompany && (
+        <AdminBulkProductRegister
+          company={selectedCompany}
+          products={products}
+          existingCompanyProducts={companyProducts.filter(cp => cp.companyId === selectedCompany.id)}
+          onClose={() => setShowBulkRegister(false)}
+          onSaveComplete={() => { setShowBulkRegister(false); fetchAll(); }}
+        />
       )}
 
       {previewImage && (

@@ -23,6 +23,10 @@ export default {
     thFunctions: 'Functions',
     thCountries: 'Countries',
     productsCount: 'products',
+    statsCompanies: 'Registered Companies',
+    statsCompaniesUnit: 'companies joined',
+    statsProducts: 'Registered Products',
+    statsProductsUnit: 'products listed',
     footer: {
       companyName: 'HIBOS Co. | CEO: Jooho Lee',
       bizNumber: 'Business Reg: 135-41-00648',
@@ -128,6 +132,9 @@ export default {
     '향수/디퓨저': 'Fragrance / Diffuser',
     '남성화장품': "Men's Grooming",
     '유아화장품': 'Baby Care',
+    '메이크업': 'Makeup',
+    '기능성화장품': 'Functional Cosmetics',
+    '이너뷰티 및 건강기능식품': 'Inner Beauty & Health Supplements',
     '기타': 'Others',
   },
 };
